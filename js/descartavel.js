@@ -41,6 +41,11 @@ function lerEstado() {
 function gravarEstado() {
   try { localStorage.setItem(CHAVE, JSON.stringify(rolo)); } catch { /* modo privado: o rolo só dura esta visita */ }
 }
+// Para testes: descartavel.html?reiniciar começa um rolo novo neste telemóvel
+if (new URLSearchParams(location.search).has('reiniciar')) {
+  try { localStorage.removeItem(CHAVE); } catch { /* ignora */ }
+  history.replaceState(null, '', location.pathname);
+}
 let rolo = lerEstado();
 
 function novoRolo(nome) {
