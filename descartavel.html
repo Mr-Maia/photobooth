@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#137a7a">
+  <meta name="theme-color" content="#141311">
   <meta name="robots" content="noindex">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Câmara descartável · Carolina &amp; Miguel</title>
@@ -11,30 +11,33 @@
   <link rel="apple-touch-icon" href="icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Caveat:wght@500;700&family=Great+Vibes&family=Limelight&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Permanent+Marker&family=Special+Elite&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/descartavel.css">
 </head>
 <body class="descartavel">
 
-  <!-- 1. Embalagem: regras + nome -->
+  <!-- 1. A caixa do rolo: regras + nome -->
   <section id="caixa" class="ecra-d">
-    <div class="embalagem">
-      <div class="faixas" aria-hidden="true"></div>
-      <p class="marca">Câmara descartável</p>
-      <h1 class="nomes" data-nomes>Carolina &amp; Miguel</h1>
-      <div class="selo"><b data-fotos>5</b><small>exp.</small></div>
-      <ul class="regras">
-        <li><b data-fotos>5</b> fotos, só tuas — escolhe bem os momentos</li>
-        <li>Não dá para ver nem apagar. É um rolo a sério!</li>
-        <li>Revelação: <b data-revelacao></b>, aqui neste mesmo link</li>
-      </ul>
+    <div class="caixa">
+      <div class="caixa-topo">
+        <span>Câmara descartável</span>
+        <span class="iso">400</span>
+      </div>
+      <h1 class="caixa-nomes"><span data-nomes>Carolina &amp; Miguel</span></h1>
+      <p class="caixa-sub"><span data-fotos>5</span> exp. &nbsp;/&nbsp; flash &nbsp;/&nbsp; cor</p>
+
+      <ol class="instrucoes">
+        <li>Tens <b data-fotos>5</b> fotografias. Não há segundas tentativas.</li>
+        <li>Não dá para ver nem apagar.</li>
+        <li>Revelação: <b data-revelacao></b>. Neste mesmo link.</li>
+      </ol>
+
       <label class="campo-nome" id="campo-nome">
-        <span>Esta câmara é de…</span>
-        <input id="nome" maxlength="30" autocomplete="given-name" placeholder="escreve o teu nome" enterkeyhint="go" spellcheck="false" autocapitalize="words">
+        <span>Nome</span>
+        <span class="fita"><input id="nome" maxlength="30" autocomplete="given-name" placeholder="escreve aqui" enterkeyhint="go" spellcheck="false" autocapitalize="words"></span>
       </label>
-      <button id="abrir" class="btn-abrir">Abrir a câmara</button>
-      <p class="iso">ISO 400 · Flash · <span data-fotos>5</span> EXP</p>
+      <button id="abrir" class="btn-cru">Abrir a câmara →</button>
     </div>
   </section>
 
@@ -42,58 +45,71 @@
   <section id="corpo" class="ecra-d">
     <div class="maquina-d">
       <div class="topo-d">
-        <div class="etiqueta">
-          <div class="etiqueta-linha"><span class="nomes" data-nomes>Carolina &amp; Miguel</span><small>ISO 400</small></div>
-          <div class="etiqueta-dono"><small>de</small><span id="dono" class="dono"></span></div>
+        <div class="gravado">
+          <span data-nomes>Carolina &amp; Miguel</span>
+          <small>Focus free · 400</small>
         </div>
-        <div class="contador" aria-live="polite"><span id="restantes">5</span></div>
+        <div class="contador" aria-live="polite" aria-label="Fotos restantes"><span id="restantes">5</span></div>
       </div>
 
-      <div class="visor-d">
-        <video id="video" playsinline muted autoplay></video>
-        <div id="flash" class="flash-d"></div>
-        <div id="aviso" class="aviso-d" hidden>
-          <p id="aviso-txt"></p>
-          <button id="aviso-repetir" class="btn-abrir">Tentar outra vez</button>
+      <div class="visor-moldura">
+        <div class="visor-d">
+          <video id="video" playsinline muted autoplay></video>
+          <div class="marcas" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+          <div id="flash" class="flash-d"></div>
+          <div id="aviso" class="aviso-d" hidden>
+            <p id="aviso-txt"></p>
+            <button id="aviso-repetir" class="btn-cru">Tentar outra vez</button>
+          </div>
         </div>
+        <span class="fita fita-dono"><span id="dono" class="dono"></span></span>
       </div>
 
-      <div class="faixa-meio" aria-hidden="true"></div>
+      <div class="cinta" aria-hidden="true"><span id="cinta-txt"></span></div>
 
       <div class="controlos">
         <button id="virar" class="botao-virar" aria-label="Virar a câmara">
-          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg>
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg>
         </button>
         <button id="disparar" class="disparador" aria-label="Tirar fotografia"></button>
         <div id="roda" class="roda" role="button" aria-label="Avançar o rolo" tabindex="0">
           <div id="dentes" class="dentes"></div>
         </div>
       </div>
-      <p id="dica" class="dica-d">Aponta e carrega no botão</p>
+      <p id="dica" class="dica-d">aponta e dispara</p>
     </div>
   </section>
 
-  <!-- 3. Rolo terminado -->
+  <!-- 3. Rolo terminado: envelope do laboratório -->
   <section id="fim" class="ecra-d">
     <div class="envelope">
-      <p class="marca">Laboratório fotográfico</p>
-      <h2>Rolo terminado!</h2>
-      <p class="envelope-txt">As tuas fotos seguiram para revelação.<br>Ninguém as vê antes de <b data-revelacao></b> — nem tu! 🙈</p>
-      <div class="falta" id="falta"></div>
+      <div class="env-cabeca">
+        <span>Laboratório fotográfico</span>
+        <span id="env-num">Nº 0000</span>
+      </div>
+      <dl class="formulario">
+        <div><dt>Nome</dt><dd><span id="env-nome" class="marcador"></span></dd></div>
+        <div><dt>Evento</dt><dd data-nomes>Carolina &amp; Miguel</dd></div>
+        <div><dt>Película</dt><dd>Cor 400 · <span id="env-exp">5</span> exp.</dd></div>
+        <div><dt>Entrega</dt><dd data-revelacao></dd></div>
+      </dl>
+      <div class="carimbo" aria-hidden="true">Em revelação</div>
+      <p class="envelope-txt">Rolo entregue. Ninguém vê estas fotografias antes da revelação. Nem tu.</p>
+      <p class="falta" id="falta"></p>
       <p id="envio-fim" class="envio-fim"></p>
       <div id="mais" class="mais" hidden>
         <p id="mais-txt"></p>
-        <button id="mais-continuar" class="btn-abrir">Continuar a fotografar</button>
+        <button id="mais-continuar" class="btn-cru">Continuar a fotografar →</button>
       </div>
-      <p class="envelope-pe">Volta a este link (ou lê o código da mesa) depois da revelação para veres as fotos de toda a gente.</p>
+      <p class="envelope-pe">Volta a este link depois da revelação para veres os rolos de toda a gente.</p>
     </div>
   </section>
 
-  <!-- 4. Revelação: galeria de todos os rolos -->
+  <!-- 4. Revelação: folha de contactos com todos os rolos -->
   <section id="revelacao" class="ecra-d">
     <header class="rev-topo">
-      <div class="letreiro pequeno" data-lampadas><span class="letreiro-txt">Revelação</span></div>
-      <h1 class="nomes" data-nomes>Carolina &amp; Miguel</h1>
+      <p class="rev-kicker">Folha de contactos</p>
+      <h1 class="rev-titulo" data-nomes>Carolina &amp; Miguel</h1>
       <p id="rev-resumo" class="rev-resumo">A abrir os envelopes…</p>
     </header>
     <div id="rolos" class="rolos"></div>
@@ -107,7 +123,7 @@
       <span id="foto-legenda"></span>
       <button id="foto-seg" class="seta" aria-label="Seguinte">›</button>
     </div>
-    <button id="foto-guardar" class="btn-abrir">Guardar esta foto</button>
+    <button id="foto-guardar" class="btn-cru">Guardar esta foto</button>
   </dialog>
 
   <div id="envio" class="envio-d" hidden></div>

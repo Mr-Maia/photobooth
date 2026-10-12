@@ -2,7 +2,6 @@
 // Cada pessoa tem N fotos, não as vê nem apaga; tudo é revelado à hora marcada.
 import { filmeDescartavel } from './effects.js';
 import { enfileirar, processarFila, aoMudarEstado, firebase, urlPublico } from './storage.js';
-import { iniciarLampadas } from './lampadas.js';
 import { guardar } from './guardar.js';
 import * as som from './sons.js';
 
@@ -22,6 +21,7 @@ window.addEventListener('unhandledrejection', (e) => mostrarErro(`Erro: ${e.reas
 
 // Textos
 document.querySelectorAll('[data-nomes]').forEach((el) => (el.textContent = cfg.nomes));
+$('#cinta-txt').textContent = Array(6).fill(`${cfg.nomes} — ${cfg.data} — cor 400 — ${D.fotos} exp. — `).join('');
 document.querySelectorAll('[data-fotos]').forEach((el) => (el.textContent = D.fotos));
 const quandoRevela = revelacao.toLocaleString('pt-PT', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
   .replace(',', ' às');
@@ -142,8 +142,8 @@ function atualizarControlos() {
   const dica = $('#dica');
   dica.classList.toggle('avancar', rolo.porAvancar);
   dica.textContent = rolo.porAvancar
-    ? 'Avança o rolo — roda para baixo ➜'
-    : restantes() === 1 ? 'Última foto! Faz valer a pena' : 'Aponta e carrega no botão';
+    ? 'roda o rolo para baixo →'
+    : restantes() === 1 ? 'última fotografia.' : 'aponta e dispara';
 }
 
 let aDisparar = false;
@@ -225,14 +225,19 @@ roda.addEventListener('pointercancel', () => (arrasto = null));
 let contagemTimer;
 function terminarRolo() {
   video.srcObject?.getTracks().forEach((t) => t.stop());
+  $('#env-nome').textContent = rolo.nome;
+  $('#env-exp').textContent = rolo.tiradas;
+  // Número de envelope estável, tirado do id da câmara
+  const num = [...rolo.id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 10000, 7);
+  $('#env-num').textContent = `Nº ${String(num).padStart(4, '0')}`;
   mostrar('fim');
   const tick = () => {
     const ms = revelacao - Date.now();
     if (ms <= 0) { clearInterval(contagemTimer); location.reload(); return; }
     const h = Math.floor(ms / 3.6e6), m = Math.floor((ms % 3.6e6) / 6e4), s = Math.floor((ms % 6e4) / 1000);
     $('#falta').textContent = h >= 48
-      ? `Faltam ${Math.round(h / 24)} dias`
-      : `Faltam ${h} h ${String(m).padStart(2, '0')} min ${String(s).padStart(2, '0')} s`;
+      ? `faltam ${Math.round(h / 24)} dias`
+      : `faltam ${h}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
   };
   tick();
   clearInterval(contagemTimer);
@@ -244,8 +249,8 @@ function terminarRolo() {
     if (restantes() > 0) {
       clearInterval(maisTimer);
       $('#mais-txt').textContent = restantes() === 1
-        ? '🎉 Os noivos deram-te mais 1 foto!'
-        : `🎉 Os noivos deram-te mais ${restantes()} fotos!`;
+        ? 'Os noivos deram-te mais 1 fotografia.'
+        : `Os noivos deram-te mais ${restantes()} fotografias.`;
       $('#mais').hidden = false;
     }
   }, 15_000);
@@ -255,10 +260,10 @@ let maisTimer;
 aoMudarEstado(({ pendentes, erro }) => {
   const el = $('#envio');
   el.hidden = pendentes === 0;
-  el.textContent = erro ? `⏳ ${pendentes} à espera de rede…` : `☁︎ a enviar ${pendentes}…`;
+  el.textContent = erro ? `${pendentes} à espera de rede` : `a enviar ${pendentes}…`;
   $('#envio-fim').textContent = pendentes
-    ? `A enviar as últimas fotos (${pendentes})… não feches já esta página.`
-    : 'Tudo enviado ✓ Já podes fechar.';
+    ? `a enviar ${pendentes} ${pendentes === 1 ? 'ficheiro' : 'ficheiros'}… não feches já.`
+    : 'tudo entregue. podes fechar.';
 });
 
 // ── Revelação: galeria de todos os rolos ─────────────────────
@@ -267,7 +272,6 @@ let lista = [], atual = 0;
 
 async function mostrarRevelacao() {
   mostrar('revelacao');
-  iniciarLampadas();
   let rolos;
   try {
     const fb = await firebase();
@@ -279,7 +283,7 @@ async function mostrarRevelacao() {
     }));
   } catch (e) {
     $('#rev-resumo').textContent = e?.code === 'storage/unauthorized'
-      ? 'O laboratório ainda está a trabalhar… volta mais logo!'
+      ? 'o laboratório ainda está a revelar. volta mais logo.'
       : `Não foi possível abrir as fotos (${e?.code || e?.message}).`;
     return;
   }
@@ -288,8 +292,8 @@ async function mostrarRevelacao() {
   rolos.sort((a, b) => (b.pasta === meu) - (a.pasta === meu) || a.nome.localeCompare(b.nome, 'pt'));
   const total = rolos.reduce((s, r) => s + r.fotos.length, 0);
   $('#rev-resumo').textContent = total
-    ? `${total} fotografias de ${rolos.length} ${rolos.length === 1 ? 'convidado' : 'convidados'}`
-    : 'Ainda ninguém usou a câmara.';
+    ? `${rolos.length} ${rolos.length === 1 ? 'rolo' : 'rolos'} · ${total} fotografias`
+    : 'nenhum rolo entregue.';
 
   const cont = $('#rolos');
   cont.replaceChildren();
@@ -299,12 +303,12 @@ async function mostrarRevelacao() {
     const topo = document.createElement('div');
     topo.className = 'rolo-topo';
     const h = document.createElement('h3');
-    h.textContent = r.pasta === meu ? `${r.nome} (o teu rolo)` : r.nome;
+    h.textContent = r.nome;
     const info = document.createElement('small');
-    info.textContent = `${r.fotos.length} fotos`;
+    info.textContent = `${r.pasta === meu ? 'o teu rolo · ' : ''}${r.fotos.length} exp.`;
     const zip = document.createElement('button');
     zip.className = 'rolo-zip';
-    zip.textContent = 'Descarregar rolo';
+    zip.textContent = 'descarregar rolo';
     zip.addEventListener('click', () => descarregarRolo(r, zip));
     const titulo = document.createElement('div');
     titulo.append(h, info);
@@ -405,7 +409,7 @@ if (Date.now() >= revelacao) {
 } else if (rolo) {
   $('#nome').value = rolo.nome;
   $('#campo-nome').hidden = true;
-  $('#abrir').textContent = `Continuar (${restantes()} fotos)`;
+  $('#abrir').textContent = `Continuar → ${restantes()} ${restantes() === 1 ? 'restante' : 'restantes'}`;
   mostrar('caixa');
 } else {
   mostrar('caixa');

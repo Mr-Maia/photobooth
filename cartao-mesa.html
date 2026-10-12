@@ -7,35 +7,47 @@
   <title>Cartões de mesa · Câmara descartável</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Great+Vibes&family=Limelight&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Permanent+Marker&family=Special+Elite&display=swap" rel="stylesheet">
   <style>
-    :root { --turquesa: #1f9e9e; --turquesa-escuro: #157575; --dourado: #c39a45; --dourado-escuro: #9c7731; --rosa: #e79bb0; --papel: #f6efe1; }
+    :root { --kraft: #c2a477; --papel: #ece3cf; --tinta: #1b1a18; --turq: #3f7f7b; --latao: #a8843f; --rosa: #a8455a; --fita: #e6d9b2;
+      --maquina: "Special Elite", "Courier New", monospace; --mono: "IBM Plex Mono", monospace; --marcador: "Permanent Marker", cursive; }
     * { box-sizing: border-box; }
-    body { margin: 0; background: #ddd; font-family: "Cormorant Garamond", Georgia, serif; color: #2c2219; }
-    .barra { padding: 16px; text-align: center; font: 16px system-ui, sans-serif; }
-    .barra button { font: 600 16px system-ui; padding: 10px 22px; border-radius: 8px; border: 0; background: var(--turquesa-escuro); color: #fff; cursor: pointer; }
+    body { margin: 0; background: #ccc; font-family: var(--maquina); color: var(--tinta); }
+    .barra { padding: 16px; text-align: center; font: 15px system-ui, sans-serif; }
+    .barra button { font: 600 15px system-ui; padding: 10px 22px; border: 0; background: var(--tinta); color: #fff; cursor: pointer; }
     .folha {
       width: 210mm; height: 297mm; margin: 0 auto 20px; background: #fff;
       display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
     }
     .cartao {
-      position: relative; margin: 6mm; padding: 9mm 8mm 7mm;
-      background: var(--papel);
-      border: 1.2mm solid var(--turquesa); outline: .4mm solid var(--dourado); outline-offset: -2.6mm;
-      display: flex; flex-direction: column; align-items: center; text-align: center;
-      overflow: hidden;
+      position: relative; margin: 6mm; padding: 0 7mm 6mm;
+      background: var(--kraft);
+      display: flex; flex-direction: column;
+      border: .3mm solid rgba(0,0,0,.25);
     }
-    .cartao::before {
-      content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3.5mm;
-      background: repeating-linear-gradient(90deg, var(--rosa) 0 7mm, var(--dourado) 7mm 10mm, var(--turquesa) 10mm 17mm, var(--papel) 17mm 18.5mm);
+    .topo {
+      margin: 0 -7mm; padding: 3mm 7mm;
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--tinta); color: var(--papel);
+      font: 600 2.9mm var(--mono); letter-spacing: .3em; text-transform: uppercase;
+      border-bottom: 1.2mm solid var(--turq);
+      box-shadow: 0 1.2mm 0 var(--latao), 0 2.4mm 0 var(--rosa);
     }
-    .tit { font-family: Limelight, serif; font-size: 7.4mm; line-height: 1.05; color: var(--turquesa-escuro); margin: 2mm 0 0; }
-    .nomes { font-family: "Great Vibes", cursive; font-size: 9mm; color: var(--dourado-escuro); line-height: 1.1; margin: 0; }
-    .qr { width: 40mm; height: 40mm; margin: 3mm 0; padding: 2mm; background: #fff; box-shadow: 0 0 0 .6mm var(--turquesa); }
+    .topo b { font-weight: 600; border: .3mm solid var(--papel); padding: .3mm 1.5mm; letter-spacing: .1em; }
+    .nomes { margin: 7mm 0 1mm; font: 400 7mm/1.05 var(--maquina); text-transform: uppercase; }
+    .sub { margin: 0 0 4mm; font: 400 2.8mm var(--mono); letter-spacing: .2em; text-transform: uppercase; opacity: .75; }
+    .meio { display: flex; flex-direction: column; align-items: center; gap: 5mm; }
+    .qr { flex: none; width: 52mm; height: 52mm; padding: 2.5mm; background: var(--papel); }
     .qr svg { width: 100%; height: 100%; display: block; }
-    ol { margin: 0; padding: 0; list-style: none; font-size: 4.4mm; line-height: 1.3; }
-    ol li b { font-family: Oswald, sans-serif; color: var(--turquesa-escuro); margin-right: 1.5mm; }
-    .rev { margin-top: auto; font-family: Oswald, sans-serif; font-size: 3.2mm; letter-spacing: .18em; text-transform: uppercase; color: var(--dourado-escuro); }
+    ol { align-self: stretch; margin: 0; padding: 0; list-style: none; counter-reset: p; font-size: 3.6mm; line-height: 1.35; }
+    ol li { counter-increment: p; margin-bottom: 1.6mm; }
+    ol li::before { content: "0" counter(p) "  "; font: 600 2.8mm var(--mono); color: var(--rosa); }
+    .fita {
+      margin-top: auto; align-self: flex-start; transform: rotate(-2deg);
+      padding: 1.5mm 5mm 1mm; background: var(--fita);
+      font: 400 4mm var(--marcador); white-space: nowrap;
+      clip-path: polygon(0 6%, 4% 0, 9% 7%, 14% 1%, 20% 6%, 100% 0, 97% 30%, 100% 55%, 96% 78%, 100% 100%, 0 100%, 3% 70%, 0 45%, 4% 22%);
+    }
     @page { size: A4; margin: 0; }
     @media print {
       body { background: none; }
@@ -55,15 +67,18 @@
 
   <template id="tpl">
     <div class="cartao">
-      <p class="tit">Câmara<br>descartável</p>
+      <div class="topo"><span>Câmara descartável</span><b>400</b></div>
       <p class="nomes"></p>
-      <div class="qr"></div>
-      <ol>
-        <li><b>1</b>Lê o código com o telemóvel</li>
-        <li><b>2</b>Tens <span class="n"></span> fotos — sem apagar, sem espreitar!</li>
-        <li><b>3</b>Apanha os melhores momentos</li>
-      </ol>
-      <p class="rev"></p>
+      <p class="sub"><span class="n"></span> exp. / flash / cor</p>
+      <div class="meio">
+        <div class="qr"></div>
+        <ol>
+          <li>Lê o código com o telemóvel.</li>
+          <li>Tens <span class="n"></span> fotografias. Sem apagar, sem espreitar.</li>
+          <li>Apanha o que mais ninguém apanha.</li>
+        </ol>
+      </div>
+      <p class="fita"></p>
     </div>
   </template>
 
@@ -88,8 +103,8 @@
           const el = document.getElementById('tpl').content.cloneNode(true);
           el.querySelector('.nomes').textContent = cfg.nomes;
           el.querySelector('.qr').innerHTML = svg;
-          el.querySelector('.n').textContent = cfg.descartavel.fotos;
-          el.querySelector('.rev').textContent = `Revelação: ${quando}`;
+          el.querySelectorAll('.n').forEach((n) => (n.textContent = cfg.descartavel.fotos));
+          el.querySelector('.fita').textContent = `revelação: ${quando}`;
           folha.append(el);
         }
         area.append(folha);
