@@ -36,11 +36,11 @@ service firebase.storage {
     }
 
     // ── Câmara descartável ───────────────────────────────
-    // Pasta por convidado: "<id do telemóvel>--<nome>", fotos 01..24 (+ miniatura).
+    // Pasta por convidado: "<id do telemóvel>--<nome>", fotos 01..05 (+ miniatura).
     match /descartavel/{rolo}/{ficheiro} {
       allow get: if revelado() || noivos();
       allow create: if rolo.matches('^[a-z0-9]{8}--[^/]{1,40}$')
-                    && ficheiro.matches('^(0[1-9]|1[0-9]|2[0-4])(-mini)?[.]jpg$')  // ⚠️ 24 fotos
+                    && ficheiro.matches('^0[1-5](-mini)?[.]jpg$')  // ⚠️ 5 fotos por pessoa
                     && request.resource.contentType == 'image/jpeg'
                     && request.resource.size < 6 * 1024 * 1024;
       allow update, delete: if false;
