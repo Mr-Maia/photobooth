@@ -24,6 +24,13 @@ window.PHOTOBOOTH_CONFIG = {
   // ⚠️ Tem de ser igual à lista em storage.rules — é lá que a segurança é verificada.
   emailsNoivos: ['EMAIL-DA-CAROLINA@gmail.com', 'EMAIL-DO-MIGUEL@gmail.com'],
 
+  // Câmara descartável (descartavel.html — QR nas mesas, nos telemóveis dos convidados)
+  descartavel: {
+    fotos: 24,                                  // ⚠️ se mudares, muda também em storage.rules
+    revelacao: '2027-06-13T12:00:00+01:00',    // ⚠️ igual em storage.rules (em milissegundos)
+    pedirNome: true,
+  },
+
   // Comportamento da cabine
   numeroFotos: 4,
   segundosContagem: 3,              // contagem antes de cada foto

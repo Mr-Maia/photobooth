@@ -146,3 +146,30 @@ export function campainha() {
     tom({ t, freq, dur, vol, ataque: 0.003 });
   }
 }
+
+// ── Câmara descartável ───────────────────────────────────────
+
+// Clique de plástico do obturador + zumbido curto do flash a carregar
+export function cliqueDescartavel() {
+  if (!pronto()) return;
+  const t = ctx.currentTime;
+  estalo({ t, dur: 0.018, freq: 6000, q: 3, vol: 0.9 });
+  estalo({ t: t + 0.012, dur: 0.05, freq: 1800, q: 1.5, vol: 0.5 });
+  tom({ t, freq: 320, freqFim: 180, dur: 0.05, vol: 0.18, forma: 'square' });
+  tom({ t: t + 0.25, freq: 2500, freqFim: 6000, dur: 0.9, vol: 0.02, ataque: 0.2 });
+}
+
+// Um "dente" da roda de avançar o rolo
+export function catraca() {
+  if (!pronto()) return;
+  const t = ctx.currentTime;
+  estalo({ t, dur: 0.012, freq: 3800 + Math.random() * 600, q: 5, vol: 0.45 });
+}
+
+// Rolo travado — pronto para a próxima foto
+export function roloPronto() {
+  if (!pronto()) return;
+  const t = ctx.currentTime;
+  estalo({ t, dur: 0.03, freq: 2200, q: 2, vol: 0.7 });
+  tom({ t, freq: 220, freqFim: 120, dur: 0.06, vol: 0.15, forma: 'square' });
+}

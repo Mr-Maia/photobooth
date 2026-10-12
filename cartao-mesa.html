@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Cartões de mesa · Câmara descartável</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Great+Vibes&family=Limelight&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --turquesa: #1f9e9e; --turquesa-escuro: #157575; --dourado: #c39a45; --dourado-escuro: #9c7731; --rosa: #e79bb0; --papel: #f6efe1; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #ddd; font-family: "Cormorant Garamond", Georgia, serif; color: #2c2219; }
+    .barra { padding: 16px; text-align: center; font: 16px system-ui, sans-serif; }
+    .barra button { font: 600 16px system-ui; padding: 10px 22px; border-radius: 8px; border: 0; background: var(--turquesa-escuro); color: #fff; cursor: pointer; }
+    .folha {
+      width: 210mm; height: 297mm; margin: 0 auto 20px; background: #fff;
+      display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+    }
+    .cartao {
+      position: relative; margin: 6mm; padding: 9mm 8mm 7mm;
+      background: var(--papel);
+      border: 1.2mm solid var(--turquesa); outline: .4mm solid var(--dourado); outline-offset: -2.6mm;
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      overflow: hidden;
+    }
+    .cartao::before {
+      content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3.5mm;
+      background: repeating-linear-gradient(90deg, var(--rosa) 0 7mm, var(--dourado) 7mm 10mm, var(--turquesa) 10mm 17mm, var(--papel) 17mm 18.5mm);
+    }
+    .tit { font-family: Limelight, serif; font-size: 7.4mm; line-height: 1.05; color: var(--turquesa-escuro); margin: 2mm 0 0; }
+    .nomes { font-family: "Great Vibes", cursive; font-size: 9mm; color: var(--dourado-escuro); line-height: 1.1; margin: 0; }
+    .qr { width: 40mm; height: 40mm; margin: 3mm 0; padding: 2mm; background: #fff; box-shadow: 0 0 0 .6mm var(--turquesa); }
+    .qr svg { width: 100%; height: 100%; display: block; }
+    ol { margin: 0; padding: 0; list-style: none; font-size: 4.4mm; line-height: 1.3; }
+    ol li b { font-family: Oswald, sans-serif; color: var(--turquesa-escuro); margin-right: 1.5mm; }
+    .rev { margin-top: auto; font-family: Oswald, sans-serif; font-size: 3.2mm; letter-spacing: .18em; text-transform: uppercase; color: var(--dourado-escuro); }
+    @page { size: A4; margin: 0; }
+    @media print {
+      body { background: none; }
+      .barra { display: none; }
+      .folha { margin: 0; break-after: page; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <div class="barra">
+    <p>4 cartões por folha A4. Imprime em papel grosso, recorta e põe um em cada mesa.</p>
+    <label>Folhas: <input id="folhas" type="number" min="1" max="20" value="3" style="width:60px"></label>
+    <button onclick="window.print()">Imprimir</button>
+  </div>
+  <div id="folhas-area"></div>
+
+  <template id="tpl">
+    <div class="cartao">
+      <p class="tit">Câmara<br>descartável</p>
+      <p class="nomes"></p>
+      <div class="qr"></div>
+      <ol>
+        <li><b>1</b>Lê o código com o telemóvel</li>
+        <li><b>2</b>Tens <span class="n"></span> fotos — sem apagar, sem espreitar!</li>
+        <li><b>3</b>Apanha os melhores momentos</li>
+      </ol>
+      <p class="rev"></p>
+    </div>
+  </template>
+
+  <script src="js/config.js"></script>
+  <script src="vendor/qrcode.min.js"></script>
+  <script>
+    const cfg = window.PHOTOBOOTH_CONFIG;
+    const qr = qrcode(0, 'M');
+    qr.addData(`${cfg.siteUrl}/descartavel.html`);
+    qr.make();
+    const svg = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+    const quando = new Date(cfg.descartavel.revelacao)
+      .toLocaleString('pt-PT', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }).replace(',', ' às');
+
+    function desenhar(n) {
+      const area = document.getElementById('folhas-area');
+      area.replaceChildren();
+      for (let f = 0; f < n; f++) {
+        const folha = document.createElement('div');
+        folha.className = 'folha';
+        for (let c = 0; c < 4; c++) {
+          const el = document.getElementById('tpl').content.cloneNode(true);
+          el.querySelector('.nomes').textContent = cfg.nomes;
+          el.querySelector('.qr').innerHTML = svg;
+          el.querySelector('.n').textContent = cfg.descartavel.fotos;
+          el.querySelector('.rev').textContent = `Revelação: ${quando}`;
+          folha.append(el);
+        }
+        area.append(folha);
+      }
+    }
+    const inp = document.getElementById('folhas');
+    inp.addEventListener('input', () => desenhar(Math.max(1, Math.min(20, +inp.value || 1))));
+    desenhar(+inp.value);
+  </script>
+</body>
+</html>

@@ -38,7 +38,7 @@ const listarLocal = () => tx('readonly', (s) => s.getAll());
 
 // ── Firebase (carregado só quando necessário) ────────────────
 let fbPromise;
-function firebase() {
+export function firebase() {
   fbPromise ??= (async () => {
     const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-app.js`);
     const st = await import(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-storage.js`);

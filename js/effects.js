@@ -173,3 +173,100 @@ export function comporTira(fotos, cfg) {
 
   return c;
 }
+
+// ── Câmara descartável ───────────────────────────────────────
+const CURVA_DESC = curvaS(5.2);
+
+// Rolo barato de 400 ASA com flash: cores quentes e intensas, centro "queimado"
+// pelo flash, vinheta forte, grão, de vez em quando uma entrada de luz laranja,
+// e a data carimbada a laranja no canto.
+export function filmeDescartavel(canvas, data = new Date()) {
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const { width: w, height: h } = canvas;
+  const img = ctx.getImageData(0, 0, w, h);
+  const d = img.data;
+  const cx = w / 2, cy = h * 0.45;
+  const raio = Math.hypot(w / 2, h / 2);
+  const lim = (v) => (v < 0 ? 0 : v > 255 ? 255 : v) | 0;
+
+  for (let y = 0; y < h; y++) {
+    const dy = (y - cy) / raio;
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      const dx = (x - cx) / raio;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      let r = d[i], g = d[i + 1], b = d[i + 2];
+      const l = 0.3 * r + 0.59 * g + 0.11 * b;
+      r = l + (r - l) * 1.15; g = l + (g - l) * 1.12; b = l + (b - l) * 1.05; // mais saturado
+      const flash = 1.1 - 0.6 * Math.pow(dist, 1.6);                            // flash + vinheta
+      r = CURVA_DESC[lim(r * 1.07 * flash + 8)];
+      g = CURVA_DESC[lim(g * 1.01 * flash + 2)];
+      b = CURVA_DESC[lim(b * 0.88 * flash)];
+      if (l < 70) g += 5;                                                        // sombras esverdeadas
+      const ruido = (Math.random() - 0.5) * 24;
+      d[i] = r + ruido + 6; d[i + 1] = g + ruido; d[i + 2] = b + ruido + 4;     // pretos desbotados
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+
+  // Entrada de luz (em ~1 de cada 4 fotos)
+  if (Math.random() < 0.28) {
+    const lado = Math.random() < 0.5 ? 0 : w;
+    const gy = Math.random() * h;
+    const grad = ctx.createRadialGradient(lado, gy, 0, lado, gy, w * (0.45 + Math.random() * 0.3));
+    grad.addColorStop(0, 'rgba(255,120,30,0.75)');
+    grad.addColorStop(0.4, 'rgba(255,60,40,0.35)');
+    grad.addColorStop(1, 'rgba(255,60,40,0)');
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+    ctx.restore();
+  }
+
+  carimboData(ctx, w, h, data);
+}
+
+// Dígitos de 7 segmentos (a b c d e f g)
+const SEGMENTOS = {
+  0: 'abcdef', 1: 'bc', 2: 'abdeg', 3: 'abcdg', 4: 'bcfg',
+  5: 'acdfg', 6: 'acdefg', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg',
+};
+
+function carimboData(ctx, w, h, data) {
+  const yy = String(data.getFullYear()).slice(2);
+  const texto = `'${yy} ${data.getMonth() + 1} ${data.getDate()}`;
+  const alt = Math.round(Math.min(w, h) * 0.05);  // altura do dígito
+  const larg = alt * 0.52, esp = alt * 0.13, gap = alt * 0.28;
+  const avanco = (c) => (c === ' ' ? larg * 0.7 : c === "'" ? esp * 2.2 : larg + gap);
+  const total = [...texto].reduce((s, c) => s + avanco(c), 0);
+  let x = w - total - w * 0.06;
+  const y = h - h * 0.06 - alt;
+
+  ctx.save();
+  ctx.fillStyle = '#ff9a2e';
+  ctx.shadowColor = 'rgba(255,80,0,0.9)';
+  ctx.shadowBlur = alt * 0.35;
+  ctx.globalAlpha = 0.92;
+  ctx.setTransform(1, 0, -0.1, 1, alt * 0.1, 0); // ligeiramente inclinado
+
+  const seg = (sx, sy, sw, sh) => ctx.fillRect(sx, sy, sw, sh);
+  for (const c of texto) {
+    if (c === "'") {
+      seg(x, y, esp, alt * 0.3);
+    } else if (SEGMENTOS[c]) {
+      const m = alt / 2;
+      for (const s of SEGMENTOS[c]) {
+        if (s === 'a') seg(x + esp, y, larg - 2 * esp, esp);
+        if (s === 'g') seg(x + esp, y + m - esp / 2, larg - 2 * esp, esp);
+        if (s === 'd') seg(x + esp, y + alt - esp, larg - 2 * esp, esp);
+        if (s === 'f') seg(x, y + esp * 0.6, esp, m - esp * 0.8);
+        if (s === 'b') seg(x + larg - esp, y + esp * 0.6, esp, m - esp * 0.8);
+        if (s === 'e') seg(x, y + m + esp * 0.2, esp, m - esp * 0.8);
+        if (s === 'c') seg(x + larg - esp, y + m + esp * 0.2, esp, m - esp * 0.8);
+      }
+    }
+    x += avanco(c);
+  }
+  ctx.restore();
+}

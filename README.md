@@ -18,6 +18,8 @@ index.html ── 4 fotos ──► sessoes/<id>/tira.jpg, foto-1..4.jpg ◄─�
 | `fotos.html` + `js/fotos.js` | Página que o QR abre no telemóvel dos convidados |
 | `js/effects.js` | Filtro vintage (grão, vinheta, contraste) e desenho da tira 2×6" |
 | `js/storage.js` | Envio para o Firebase com fila offline |
+| `descartavel.html` + `js/descartavel.js` | Câmara descartável nos telemóveis dos convidados |
+| `cartao-mesa.html` | Cartões com QR para imprimir e pôr nas mesas (4 por folha A4) |
 | `galeria.html` + `js/galeria.js` | Galeria privada dos noivos (login Google, descarregar tudo) |
 | `js/config.js` | **⚙️ Tudo o que precisas de editar** (nomes, data, Firebase, tempos) |
 | `storage.rules` | Regras de segurança do Firebase Storage |
@@ -78,6 +80,18 @@ A forma mais simples é a [galeria](#galeria-dos-noivos-galeriahtml). Está tudo
 gcloud storage cp -r gs://O-TEU-BUCKET/sessoes ./fotos-casamento
 ```
 (também dá para ver e descarregar uma a uma na Consola Firebase → Storage.)
+
+## Câmara descartável (`descartavel.html`)
+Nas mesas há um cartão com QR (imprimir em `cartao-mesa.html`). Cada convidado escreve o nome e tem
+**24 fotos**, sem as ver nem apagar. Depois de cada foto tem de rodar a roda para avançar o rolo.
+As fotos levam um efeito de rolo barato com flash e a data carimbada a laranja.
+São guardadas em `descartavel/<id>--<nome>/01.jpg … 24.jpg`.
+
+Na **hora da revelação**, o mesmo link passa a mostrar a galeria com os rolos de toda a gente,
+para ver e descarregar. As regras do Firebase garantem que ninguém vê nada antes dessa hora.
+
+⚠️ Se mudares o número de fotos ou a hora da revelação em `js/config.js`, muda também em `storage.rules`
+(o comentário explica como calcular o valor) e volta a publicar as regras.
 
 ## Custos
 Plano Blaze: só se paga o que passar do escalão gratuito, que se renova todos os meses.
