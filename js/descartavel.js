@@ -203,16 +203,17 @@ async function disparar() {
   }
 }
 
-// Roda de avançar o rolo: arrastar para baixo (ou tocar)
-const DENTE = 16, VOLTA = 150;
+// Roda de avançar o rolo: arrastar para baixo (ou tocar).
+// A distância depende do tamanho da roda no ecrã: uma passagem do dedo na roda chega sempre.
+const DENTE = 10;
 let arrasto = null, deslocar = 0;
 function avancarDente() {
-  deslocar += DENTE / 2;
+  deslocar += DENTE * 0.7;
   $('#dentes').style.setProperty('--deslocar', `${deslocar}px`);
   som.catraca();
   navigator.vibrate?.(4);
 }
-const volta = () => (rolo.primeiro ? VOLTA * 2.2 : VOLTA);
+const volta = () => $('#roda').clientHeight * (rolo.primeiro ? 0.75 : 0.5);
 function rolarPronto() {
   rolo.porAvancar = false;
   rolo.primeiro = false;
