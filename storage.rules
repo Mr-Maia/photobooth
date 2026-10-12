@@ -1,0 +1,30 @@
+rules_version = '2';
+
+// Regras do Firebase Storage para o photobooth.
+//  - Qualquer pessoa com o link (QR) consegue VER as fotos dessa sessão.
+//  - Só os noivos (login Google) conseguem LISTAR todas as sessões, na galeria.
+//  - A cabine só pode CRIAR ficheiros novos — nunca apagar nem reescrever.
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ⚠️ Mete aqui os emails Google dos noivos (os mesmos de emailsNoivos em js/config.js)
+    function noivos() {
+      return request.auth != null
+          && request.auth.token.email_verified == true
+          && request.auth.token.email in ['EMAIL-DA-CAROLINA@gmail.com', 'EMAIL-DO-MIGUEL@gmail.com'];
+    }
+
+    match /sessoes/{sessao}/{ficheiro} {
+      allow get: if sessao.matches('^[0-9]{12}-[a-z0-9]{6}$') || noivos();
+      allow create: if sessao.matches('^[0-9]{12}-[a-z0-9]{6}$')
+                    && ficheiro.matches('^(tira|tira-mini|foto-[1-4])[.]jpg$')
+                    && request.resource.contentType == 'image/jpeg'
+                    && request.resource.size < 12 * 1024 * 1024;
+      allow update, delete: if false;
+    }
+
+    match /sessoes/{caminho=**} {
+      allow list: if noivos();
+    }
+  }
+}

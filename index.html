@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Photobooth">
+  <meta name="theme-color" content="#f6efe1">
+  <title>Photobooth · Carolina &amp; Miguel</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Great+Vibes&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="cabine">
+
+  <!-- 1. Ecrã inicial -->
+  <section id="inicio" class="ecra ativo">
+    <div class="moldura">
+      <p class="pre">Photobooth</p>
+      <h1 class="nomes" data-nomes>Carolina &amp; Miguel</h1>
+      <div class="ornamento"><span></span><i>♥</i><span></span></div>
+      <p class="instr">Escolham o estilo e preparem-se para <strong>4 fotos</strong></p>
+      <div class="botoes">
+        <button class="estilo pb" data-estilo="pb">
+          <span class="amostra"></span>
+          Preto &amp; Branco
+          <small>clássico</small>
+        </button>
+        <button class="estilo cor" data-estilo="cor">
+          <span class="amostra"></span>
+          Vintage
+          <small>a cores</small>
+        </button>
+      </div>
+      <p class="data" data-data></p>
+    </div>
+  </section>
+
+  <!-- 2. Câmara -->
+  <section id="camara" class="ecra">
+    <div class="visor">
+      <video id="video" playsinline muted autoplay></video>
+      <div class="cantos"><i></i><i></i><i></i><i></i></div>
+      <div id="contagem" class="contagem"></div>
+      <div id="mensagem" class="mensagem"></div>
+    </div>
+    <div id="miniaturas" class="miniaturas"></div>
+    <div id="flash" class="flash"></div>
+  </section>
+
+  <!-- 3. A revelar -->
+  <section id="revelar" class="ecra">
+    <div class="revelar">
+      <div class="tira-fantasma"><i></i><i></i><i></i><i></i></div>
+      <p>A revelar as fotos…</p>
+    </div>
+  </section>
+
+  <!-- 4. Resultado + QR -->
+  <section id="final" class="ecra">
+    <div class="final">
+      <img id="tira" class="tira" alt="Tira de fotos">
+      <div class="qr-lado">
+        <h2>As vossas fotos!</h2>
+        <p>Apontem a câmara do telemóvel para o código e guardem a tira e as fotos.</p>
+        <div id="qr" class="qr"></div>
+        <button id="terminar" class="btn">Terminar <span id="segundos"></span></button>
+      </div>
+    </div>
+  </section>
+
+  <div id="estado-envio" class="estado-envio" hidden></div>
+  <div id="erro-camara" class="erro-camara" hidden></div>
+
+  <script src="js/config.js"></script>
+  <script src="vendor/qrcode.min.js"></script>
+  <script type="module" src="js/booth.js"></script>
+</body>
+</html>

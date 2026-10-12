@@ -1,0 +1,10 @@
+{
+  "name": "Photobooth Carolina & Miguel",
+  "short_name": "Photobooth",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#f6efe1",
+  "theme_color": "#f6efe1",
+  "icons": [{ "src": "icon.png", "sizes": "512x512", "type": "image/png" }]
+}
