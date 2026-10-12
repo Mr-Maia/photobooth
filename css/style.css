@@ -264,13 +264,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
   font-size: min(18vw, 26vh);
   text-shadow: 0 4px 24px rgba(0,0,0,.5);
 }
-.intertitulo {
-  position: absolute; left: 50%; bottom: 6%; transform: translateX(-50%); z-index: 2;
-  padding: 10px 34px; white-space: nowrap;
-  background: rgba(10,8,6,.78); color: #f6efe1;
-  border: 3px double rgba(246,239,225,.8); outline: 1px solid rgba(195,154,69,.8); outline-offset: 4px;
-  font-size: clamp(24px, 3.6vw, 38px); font-style: italic; font-weight: 600;
-}
 .flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 3; }
 .flash.disparar { animation: flash .7s ease-out; }
 @keyframes flash { 0% { opacity: 1; } 100% { opacity: 0; } }
@@ -412,6 +405,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .convidado .nomes { font-size: clamp(44px, 12.5vw, 80px); }
 .convidado .ornamento span { width: 70px; }
 .convidado .lead { font-size: 21px; margin: 0 0 22px; }
+.convidado .frase { font-size: 24px; font-style: italic; font-weight: 600; color: var(--turquesa-escuro); text-wrap: balance; }
 .convidado .tira-g {
   display: block; width: min(68%, 320px); margin: 0 auto 22px;
   box-shadow: 0 14px 34px rgba(58,47,37,.25);

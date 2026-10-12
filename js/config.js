@@ -30,4 +30,5 @@ window.PHOTOBOOTH_CONFIG = {
   segundosEntreFotos: 1.2,          // pausa depois de cada foto
   segundosEcraFinal: 75,            // tempo do ecrã com o QR antes de voltar ao início
   espelharFotoFinal: false,         // true = fotos guardadas como num espelho (igual à pré-visualização)
+  som: true,                        // efeitos sonoros vintage durante as fotos
 };

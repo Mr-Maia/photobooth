@@ -1,6 +1,7 @@
 import { aplicarVintage, comporTira } from './effects.js';
 import { enfileirar, processarFila, aoMudarEstado, firebaseConfigurado } from './storage.js';
 import { iniciarLampadas } from './lampadas.js';
+import * as som from './sons.js';
 
 const cfg = window.PHOTOBOOTH_CONFIG;
 const $ = (s) => document.querySelector(s);
@@ -19,7 +20,6 @@ window.addEventListener('unhandledrejection', (e) => mostrarErro(`Erro: ${e.reas
 
 const video = $('#video');
 const FOTO_W = 1600, FOTO_H = 1200; // resolução de cada foto guardada (4:3)
-const FRASES = ['Sorriam!', 'Agora uma careta!', 'Um beijinho!', 'A última — a melhor!'];
 let aDecorrer = false;
 
 document.querySelectorAll('[data-nomes]').forEach((el) => (el.textContent = cfg.nomes));
@@ -93,6 +93,7 @@ const reiniciarAnimacao = (el, classe) => { el.classList.remove(classe); void el
 async function sessao(estilo) {
   if (aDecorrer) return;
   aDecorrer = true;
+  som.ativarSom(); // ainda dentro do toque — o iOS exige isto para haver som
   const filtro = estilo === 'pb' ? 'grayscale(1) contrast(1.2) sepia(.12)' : 'saturate(.75) sepia(.22) contrast(1.05)';
   document.documentElement.style.setProperty('--filtro-previo', filtro);
 
@@ -115,21 +116,21 @@ async function sessao(estilo) {
     }
 
     const fotos = [];
-    const contagem = $('#contagem'), numero = contagem.querySelector('span'), msg = $('#mensagem');
+    const contagem = $('#contagem'), numero = contagem.querySelector('span');
+    som.projetorLigar();
     for (let i = 0; i < n; i++) {
       $('#pose').textContent = `Pose ${i + 1} de ${n}`;
-      msg.textContent = i === n - 1 ? FRASES[3] : FRASES[i % 3];
-      msg.hidden = false;
       await esperar(i === 0 ? 1200 : 500);
       contagem.hidden = false;
       for (let s = cfg.segundosContagem; s > 0; s--) {
         numero.textContent = s;
         reiniciarAnimacao(contagem, 'tic');
+        som.tique(s === 1);
         await esperar(1000);
       }
       contagem.hidden = true;
-      msg.hidden = true;
       const foto = capturar();
+      som.disparo();
       reiniciarAnimacao($('#flash'), 'disparar');
       fotos.push(foto);
       $('#luzes').children[i].classList.add('acesa');
@@ -141,7 +142,9 @@ async function sessao(estilo) {
       await esperar(cfg.segundosEntreFotos * 1000);
     }
 
+    som.projetorDesligar();
     mostrar('revelar');
+    const pararMotor = som.revelacao();
     await esperar(80); // deixa o ecrã "a revelar" aparecer antes do trabalho pesado
     await document.fonts.load('128px "Great Vibes"').catch(() => {});
     await document.fonts.load('600 40px "Cormorant Garamond"').catch(() => {});
@@ -163,9 +166,12 @@ async function sessao(estilo) {
     await enfileirar(ficheiros);
 
     await esperar(1200); // um bocadinho de suspense na máquina
+    pararMotor();
+    som.campainha();
     mostrarFinal(URL.createObjectURL(tiraBlob), id);
   } catch (e) {
     console.error(e);
+    som.projetorDesligar();
     mostrarErro(`Algo correu mal: ${e?.message || e}`);
     mostrar('inicio');
   } finally {

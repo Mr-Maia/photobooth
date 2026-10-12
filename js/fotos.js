@@ -6,6 +6,20 @@ const $ = (s) => document.querySelector(s);
 document.querySelectorAll('[data-nomes]').forEach((el) => (el.textContent = cfg.nomes));
 document.querySelectorAll('[data-data]').forEach((el) => (el.textContent = cfg.data));
 
+const FRASES = [
+  'Todos giraços! 😍',
+  'Da próxima vez não se esqueçam de sorrir.',
+  'Ai, o olho fechado… é sempre a mesma coisa. 🙈',
+  'Esta vai direitinha para o frigorífico da avó.',
+  'O fotógrafo oficial que se cuide.',
+  'Fotogénicos até dizer chega.',
+  'Quem é que estava a piscar o olho? 😉',
+  'Ninguém viu nada. A não ser os noivos, que ficam com uma cópia.',
+  'Prontos para a capa da revista.',
+  'Melhor pose da noite? Muito provavelmente.',
+];
+$('#frase').textContent = FRASES[Math.floor(Math.random() * FRASES.length)];
+
 const id = new URLSearchParams(location.search).get('s') || '';
 const valido = /^[0-9]{12}-[a-z0-9]{6}$/.test(id);
 const pasta = `sessoes/${id}`;
