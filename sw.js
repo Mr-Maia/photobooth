@@ -1,9 +1,9 @@
 // Service worker simples: guarda a cabine em cache para continuar a funcionar
 // se a rede do local falhar e alguém recarregar a página no iPad.
 // Estratégia "rede primeiro" — com internet usa sempre a versão mais recente.
-const CACHE = 'photobooth-v1';
+const CACHE = 'photobooth-v2';
 const BASE = [
-  './', 'index.html', 'css/style.css', 'js/config.js', 'js/booth.js', 'js/effects.js', 'js/storage.js',
+  './', 'index.html', 'css/style.css', 'js/config.js', 'js/booth.js', 'js/effects.js', 'js/storage.js', 'js/lampadas.js',
   'vendor/qrcode.min.js', 'manifest.webmanifest', 'icon.png',
 ];
 

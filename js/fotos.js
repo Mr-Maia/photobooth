@@ -1,4 +1,5 @@
 import { urlPublico } from './storage.js';
+import { iniciarLampadas } from './lampadas.js';
 
 const cfg = window.PHOTOBOOTH_CONFIG;
 const $ = (s) => document.querySelector(s);
@@ -81,4 +82,5 @@ async function guardar(lista) {
 
 $('#guardar-tira').addEventListener('click', () => guardar([ficheiros[0]]));
 $('#guardar-todas').addEventListener('click', () => guardar(ficheiros.slice(1)));
+iniciarLampadas();
 iniciar();

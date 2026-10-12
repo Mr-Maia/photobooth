@@ -1,40 +1,68 @@
 import { aplicarVintage, comporTira } from './effects.js';
 import { enfileirar, processarFila, aoMudarEstado, firebaseConfigurado } from './storage.js';
+import { iniciarLampadas } from './lampadas.js';
 
 const cfg = window.PHOTOBOOTH_CONFIG;
 const $ = (s) => document.querySelector(s);
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// Qualquer erro inesperado aparece no ecrã (em vez de "não acontece nada")
+function mostrarErro(msg) {
+  const el = $('#erro');
+  el.textContent = msg;
+  el.hidden = false;
+  clearTimeout(mostrarErro.t);
+  mostrarErro.t = setTimeout(() => (el.hidden = true), 12_000);
+}
+window.addEventListener('error', (e) => mostrarErro(`Erro: ${e.message}`));
+window.addEventListener('unhandledrejection', (e) => mostrarErro(`Erro: ${e.reason?.message || e.reason}`));
+
 const video = $('#video');
 const FOTO_W = 1600, FOTO_H = 1200; // resolução de cada foto guardada (4:3)
-const FRASES = ['Sorriam! 😄', 'Agora uma careta! 😜', 'Um beijinho! 💋', 'A última — a melhor! ✨', 'Mais uma! 📸'];
+const FRASES = ['Sorriam!', 'Agora uma careta!', 'Um beijinho!', 'A última — a melhor!'];
 let aDecorrer = false;
 
 document.querySelectorAll('[data-nomes]').forEach((el) => (el.textContent = cfg.nomes));
-document.querySelectorAll('[data-data]').forEach((el) => (el.textContent = cfg.data));
+const redesenharLampadas = iniciarLampadas();
 
 function mostrar(id) {
   document.querySelectorAll('.ecra').forEach((e) => e.classList.toggle('ativo', e.id === id));
+  if (id === 'inicio') requestAnimationFrame(redesenharLampadas);
 }
 
 // ── Câmara ───────────────────────────────────────────────────
-async function ligarCamara() {
-  if (video.srcObject?.active) return;
-  try {
-    video.srcObject = await navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: { facingMode: 'user', width: { ideal: 1920 }, height: { ideal: 1440 }, aspectRatio: { ideal: 4 / 3 } },
-    });
-    await video.play().catch(() => {});
-    $('#erro-camara').hidden = true;
-  } catch (e) {
-    const el = $('#erro-camara');
-    el.hidden = false;
-    el.textContent = location.protocol !== 'https:' && location.hostname !== 'localhost'
-      ? 'A câmara só funciona com https:// — abre o site pelo endereço do GitHub Pages.'
-      : `Não foi possível ligar a câmara (${e.name}). Verifica as permissões em Definições → Safari → Câmara.`;
-    throw e;
+const comLimite = (p, ms, msg) =>
+  Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(msg)), ms))]);
+
+let pedidoCamara;
+function ligarCamara() {
+  if (video.srcObject?.active) return Promise.resolve();
+  if (!navigator.mediaDevices?.getUserMedia) {
+    return Promise.reject(new Error(location.protocol !== 'https:'
+      ? 'A câmara só funciona com https://.'
+      : 'Este browser não dá acesso à câmara. Abre o site no Safari.'));
   }
+  pedidoCamara ??= navigator.mediaDevices.getUserMedia({
+    audio: false,
+    video: { facingMode: 'user', width: { ideal: 1920 }, height: { ideal: 1440 } },
+  }).then((stream) => { video.srcObject = stream; })
+    .finally(() => { pedidoCamara = undefined; });
+  return pedidoCamara;
+}
+
+// Espera até haver imagem a sério no vídeo (o ecrã da câmara já tem de estar visível)
+async function videoPronto() {
+  video.play().catch(() => {});
+  for (let i = 0; i < 100 && !(video.videoWidth && video.readyState >= 2); i++) await esperar(50);
+  if (!video.videoWidth) throw new Error('A câmara não está a enviar imagem.');
+}
+
+function explicarErroCamara(e) {
+  if (e?.name === 'NotAllowedError') {
+    return 'O acesso à câmara foi recusado. No iPad: Definições → Apps → Safari → Câmara → Permitir. Depois recarrega a página.';
+  }
+  if (e?.name === 'NotReadableError') return 'A câmara está a ser usada por outra app. Fecha-a e tenta outra vez.';
+  return e?.message || String(e);
 }
 
 function capturar() {
@@ -60,44 +88,61 @@ function novoId() {
 }
 
 const paraBlob = (canvas, q = 0.9) => new Promise((r) => canvas.toBlob(r, 'image/jpeg', q));
+const reiniciarAnimacao = (el, classe) => { el.classList.remove(classe); void el.offsetWidth; el.classList.add(classe); };
 
 async function sessao(estilo) {
   if (aDecorrer) return;
   aDecorrer = true;
+  const filtro = estilo === 'pb' ? 'grayscale(1) contrast(1.2) sepia(.12)' : 'saturate(.75) sepia(.22) contrast(1.05)';
+  document.documentElement.style.setProperty('--filtro-previo', filtro);
+
+  // Mostra logo o ecrã da câmara — o toque tem sempre resposta imediata
+  const n = cfg.numeroFotos;
+  $('#aviso').hidden = true;
+  $('#pose').textContent = 'A preparar a câmara…';
+  $('#luzes').replaceChildren(...Array.from({ length: n }, () => document.createElement('i')));
+  $('#miniaturas').replaceChildren(...Array.from({ length: n }, () => document.createElement('div')));
+  mostrar('camara');
+
   try {
-    await ligarCamara();
-    document.documentElement.style.setProperty('--filtro-previo',
-      estilo === 'pb' ? 'grayscale(1) contrast(1.2)' : 'saturate(.75) sepia(.2)');
-    mostrar('camara');
-    const mini = $('#miniaturas');
-    mini.replaceChildren(...Array.from({ length: cfg.numeroFotos }, () => document.createElement('div')));
+    try {
+      await comLimite(ligarCamara(), 20_000, 'A câmara não respondeu.');
+      await videoPronto();
+    } catch (e) {
+      $('#aviso-txt').textContent = explicarErroCamara(e);
+      $('#aviso').hidden = false;
+      return;
+    }
 
     const fotos = [];
-    for (let n = 0; n < cfg.numeroFotos; n++) {
-      $('#mensagem').textContent = n === cfg.numeroFotos - 1 ? FRASES[3] : FRASES[n] ?? FRASES[4];
-      await esperar(n === 0 ? 900 : 300);
+    const contagem = $('#contagem'), numero = contagem.querySelector('span'), msg = $('#mensagem');
+    for (let i = 0; i < n; i++) {
+      $('#pose').textContent = `Pose ${i + 1} de ${n}`;
+      msg.textContent = i === n - 1 ? FRASES[3] : FRASES[i % 3];
+      msg.hidden = false;
+      await esperar(i === 0 ? 1200 : 500);
+      contagem.hidden = false;
       for (let s = cfg.segundosContagem; s > 0; s--) {
-        const el = $('#contagem');
-        el.textContent = s;
-        el.classList.remove('pulsar'); void el.offsetWidth; el.classList.add('pulsar');
+        numero.textContent = s;
+        reiniciarAnimacao(contagem, 'tic');
         await esperar(1000);
       }
-      $('#contagem').textContent = '';
+      contagem.hidden = true;
+      msg.hidden = true;
       const foto = capturar();
-      const f = $('#flash');
-      f.classList.remove('disparar'); void f.offsetWidth; f.classList.add('disparar');
+      reiniciarAnimacao($('#flash'), 'disparar');
       fotos.push(foto);
+      $('#luzes').children[i].classList.add('acesa');
 
       const img = document.createElement('img');
       img.src = foto.toDataURL('image/jpeg', 0.5);
-      img.style.filter = getComputedStyle(document.documentElement).getPropertyValue('--filtro-previo');
-      mini.children[n].replaceWith(img);
+      img.style.filter = filtro;
+      $('#miniaturas').children[i].replaceWith(img);
       await esperar(cfg.segundosEntreFotos * 1000);
     }
-    $('#mensagem').textContent = '';
 
     mostrar('revelar');
-    await esperar(50); // deixa o ecrã "a revelar" aparecer antes do trabalho pesado
+    await esperar(80); // deixa o ecrã "a revelar" aparecer antes do trabalho pesado
     await document.fonts.load('128px "Great Vibes"').catch(() => {});
     await document.fonts.load('600 40px "Cormorant Garamond"').catch(() => {});
     for (const f of fotos) aplicarVintage(f, estilo);
@@ -117,9 +162,11 @@ async function sessao(estilo) {
     ficheiros.push({ caminho: `${pasta}/tira-mini.jpg`, blob: await paraBlob(mini, 0.8) });
     await enfileirar(ficheiros);
 
-    await mostrarFinal(URL.createObjectURL(tiraBlob), id);
+    await esperar(1200); // um bocadinho de suspense na máquina
+    mostrarFinal(URL.createObjectURL(tiraBlob), id);
   } catch (e) {
     console.error(e);
+    mostrarErro(`Algo correu mal: ${e?.message || e}`);
     mostrar('inicio');
   } finally {
     aDecorrer = false;
@@ -144,7 +191,7 @@ function mostrarFinal(tiraUrl, id) {
 
   mostrar('final');
   let s = cfg.segundosEcraFinal;
-  const tick = () => { $('#segundos').textContent = `(${s})`; if (s-- <= 0) voltarInicio(); };
+  const tick = () => { $('#segundos').textContent = `· ${s}`; if (s-- <= 0) voltarInicio(); };
   clearInterval(fimTimer);
   tick();
   fimTimer = setInterval(tick, 1000);
@@ -159,6 +206,7 @@ function voltarInicio() {
 document.querySelectorAll('[data-estilo]').forEach((b) =>
   b.addEventListener('click', () => sessao(b.dataset.estilo)));
 $('#terminar').addEventListener('click', voltarInicio);
+$('#aviso-voltar').addEventListener('click', voltarInicio);
 
 // Indicador discreto de envios pendentes (canto inferior direito)
 aoMudarEstado(({ pendentes, erro }) => {
@@ -173,15 +221,14 @@ if (!firebaseConfigurado) console.warn('Firebase por configurar em js/config.js 
 processarFila(); // retoma envios que tenham ficado pendentes
 
 // Ecrã sempre ligado (Safari 16.4+)
-let wakeLock;
 async function manterLigado() {
-  try { wakeLock = await navigator.wakeLock?.request('screen'); } catch { /* ignora */ }
+  try { await navigator.wakeLock?.request('screen'); } catch { /* ignora */ }
 }
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') { manterLigado(); ligarCamara().catch(() => {}); }
+  if (document.visibilityState === 'visible') manterLigado();
 });
 manterLigado();
-ligarCamara().catch(() => {});
+ligarCamara().catch(() => {}); // pede já a autorização da câmara (sem bloquear nada)
 
 // Impede zoom/scroll acidental na cabine
 document.addEventListener('gesturestart', (e) => e.preventDefault());

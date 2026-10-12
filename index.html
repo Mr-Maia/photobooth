@@ -7,75 +7,113 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Photobooth">
-  <meta name="theme-color" content="#f6efe1">
+  <meta name="theme-color" content="#1b1511">
   <title>Photobooth · Carolina &amp; Miguel</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon.png">
+  <link rel="icon" href="icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Great+Vibes&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Great+Vibes&family=Limelight&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="cabine">
 
+  <!-- Cenário: sanefa + cortinas de veludo -->
+  <div class="sanefa" aria-hidden="true"><div class="sanefa-ouro"></div><div class="sanefa-veludo"></div></div>
+  <div class="cortina esq" aria-hidden="true"></div>
+  <div class="cortina dir" aria-hidden="true"></div>
+  <div class="borla esq" aria-hidden="true"></div>
+  <div class="borla dir" aria-hidden="true"></div>
+
   <!-- 1. Ecrã inicial -->
   <section id="inicio" class="ecra ativo">
-    <div class="moldura">
-      <p class="pre">Photobooth</p>
+    <div class="palco">
+      <div class="letreiro" data-lampadas>
+        <span class="letreiro-pre">✦ o ✦</span>
+        <span class="letreiro-txt">Photobooth</span>
+      </div>
+      <p class="dos">dos noivos</p>
       <h1 class="nomes" data-nomes>Carolina &amp; Miguel</h1>
-      <div class="ornamento"><span></span><i>♥</i><span></span></div>
-      <p class="instr">Escolham o estilo e preparem-se para <strong>4 fotos</strong></p>
-      <div class="botoes">
-        <button class="estilo pb" data-estilo="pb">
-          <span class="amostra"></span>
-          Preto &amp; Branco
-          <small>clássico</small>
+      <p class="sub">4 poses <span>✦</span> 1 tira vintage <span>✦</span> para levar no telemóvel</p>
+
+      <div class="bilhetes">
+        <button class="bilhete creme" data-estilo="pb">
+          <span class="bilhete-in">
+            <span class="b-num">Bilhete Nº 01</span>
+            <span class="b-titulo">Preto &amp; Branco</span>
+            <span class="b-sub">clássico, como antigamente</span>
+            <span class="b-rodape">Entrada livre</span>
+          </span>
         </button>
-        <button class="estilo cor" data-estilo="cor">
-          <span class="amostra"></span>
-          Vintage
-          <small>a cores</small>
+        <button class="bilhete rosa" data-estilo="cor">
+          <span class="bilhete-in">
+            <span class="b-num">Bilhete Nº 02</span>
+            <span class="b-titulo">Vintage</span>
+            <span class="b-sub">a cores, anos 70</span>
+            <span class="b-rodape">Entrada livre</span>
+          </span>
         </button>
       </div>
-      <p class="data" data-data></p>
+      <p class="toque">toquem num bilhete para começar</p>
     </div>
   </section>
 
   <!-- 2. Câmara -->
   <section id="camara" class="ecra">
+    <div class="cabine-topo">
+      <span id="pose" class="pose">Pose 1 de 4</span>
+      <span id="luzes" class="luzes"></span>
+    </div>
     <div class="visor">
       <video id="video" playsinline muted autoplay></video>
-      <div class="cantos"><i></i><i></i><i></i><i></i></div>
-      <div id="contagem" class="contagem"></div>
-      <div id="mensagem" class="mensagem"></div>
+      <div id="contagem" class="leader" hidden>
+        <div class="disco"><i class="ponteiro"></i><span></span></div>
+      </div>
+      <div id="mensagem" class="intertitulo" hidden></div>
+      <div id="flash" class="flash"></div>
+      <div id="aviso" class="aviso" hidden>
+        <p id="aviso-txt"></p>
+        <button id="aviso-voltar" class="btn-vintage">Voltar ao início</button>
+      </div>
     </div>
-    <div id="miniaturas" class="miniaturas"></div>
-    <div id="flash" class="flash"></div>
+    <div id="miniaturas" class="pelicula"></div>
   </section>
 
   <!-- 3. A revelar -->
   <section id="revelar" class="ecra">
-    <div class="revelar">
-      <div class="tira-fantasma"><i></i><i></i><i></i><i></i></div>
-      <p>A revelar as fotos…</p>
+    <div class="maquina">
+      <div class="ranhura"></div>
+      <div class="saida"><div class="tira-sai"><i></i><i></i><i></i><i></i></div></div>
     </div>
+    <p class="revelar-txt">A revelar as fotografias…</p>
   </section>
 
   <!-- 4. Resultado + QR -->
   <section id="final" class="ecra">
     <div class="final">
-      <img id="tira" class="tira" alt="Tira de fotos">
-      <div class="qr-lado">
-        <h2>As vossas fotos!</h2>
-        <p>Apontem a câmara do telemóvel para o código e guardem a tira e as fotos.</p>
-        <div id="qr" class="qr"></div>
-        <button id="terminar" class="btn">Terminar <span id="segundos"></span></button>
+      <div class="estendal">
+        <div class="fio"></div>
+        <div class="pendurada">
+          <i class="mola"></i>
+          <img id="tira" class="tira" alt="Tira de fotos">
+        </div>
+      </div>
+      <div class="lado-qr">
+        <div class="bilhete-qr">
+          <div class="bilhete-qr-in">
+            <span class="b-num">Levem as fotos</span>
+            <div id="qr" class="qr"></div>
+            <p>Apontem a câmara do telemóvel<br>para guardar a tira e as 4 fotos</p>
+          </div>
+        </div>
+        <button id="terminar" class="btn-vintage">Terminar <span id="segundos"></span></button>
       </div>
     </div>
   </section>
 
   <div id="estado-envio" class="estado-envio" hidden></div>
-  <div id="erro-camara" class="erro-camara" hidden></div>
+  <div id="erro" class="erro-global" hidden></div>
 
   <script src="js/config.js"></script>
   <script src="vendor/qrcode.min.js"></script>
