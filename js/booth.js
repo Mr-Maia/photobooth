@@ -15,8 +15,10 @@ function mostrarErro(msg) {
   clearTimeout(mostrarErro.t);
   mostrarErro.t = setTimeout(() => (el.hidden = true), 12_000);
 }
-window.addEventListener('error', (e) => mostrarErro(`Erro: ${e.message}`));
-window.addEventListener('unhandledrejection', (e) => mostrarErro(`Erro: ${e.reason?.message || e.reason}`));
+// Erros que o Safari lança por coisas normais (vídeo interrompido, etc.) — não interessam ao convidado
+const inofensivo = (r) => ['AbortError', 'NotAllowedError'].includes(r?.name) || /play\(\)|interrupted|ResizeObserver/i.test(r?.message || String(r));
+window.addEventListener('error', (e) => { if (!inofensivo(e.error || e)) mostrarErro(`Erro: ${e.message}`); });
+window.addEventListener('unhandledrejection', (e) => { if (!inofensivo(e.reason)) mostrarErro(`Erro: ${e.reason?.message || e.reason}`); });
 
 const video = $('#video');
 const FOTO_W = 1600, FOTO_H = 1200; // resolução de cada foto guardada (4:3)
@@ -27,6 +29,7 @@ const redesenharLampadas = iniciarLampadas();
 
 function mostrar(id) {
   document.querySelectorAll('.ecra').forEach((e) => e.classList.toggle('ativo', e.id === id));
+  document.getElementById(id).scrollTo(0, 0);
   if (id === 'inicio') requestAnimationFrame(redesenharLampadas);
 }
 
@@ -163,7 +166,12 @@ async function sessao(estilo) {
     mini.width = 300; mini.height = 900;
     mini.getContext('2d').drawImage(tira, 0, 0, 300, 900);
     ficheiros.push({ caminho: `${pasta}/tira-mini.jpg`, blob: await paraBlob(mini, 0.8) });
-    await enfileirar(ficheiros);
+    try {
+      await enfileirar(ficheiros);
+    } catch (e) {
+      console.error(e);
+      mostrarErro('Atenção: esta sessão pode não ter ficado guardada.');
+    }
 
     await esperar(1200); // um bocadinho de suspense na máquina
     pararMotor();
@@ -236,8 +244,13 @@ document.addEventListener('visibilitychange', () => {
 manterLigado();
 ligarCamara().catch(() => {}); // pede já a autorização da câmara (sem bloquear nada)
 
-// Impede zoom/scroll acidental na cabine
+// Impede o zoom com dois dedos (o scroll continua a funcionar se algum ecrã não couber)
 document.addEventListener('gesturestart', (e) => e.preventDefault());
-document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+
+// Ao rodar o iPad: volta ao topo do ecrã ativo e redesenha o letreiro
+window.addEventListener('orientationchange', () => setTimeout(() => {
+  document.querySelector('.ecra.ativo')?.scrollTo(0, 0);
+  redesenharLampadas();
+}, 300));
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});

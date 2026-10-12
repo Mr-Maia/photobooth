@@ -63,7 +63,7 @@
     <label>Folhas: <input id="folhas" type="number" min="1" max="20" value="3" style="width:60px"></label>
     <button onclick="window.print()">Imprimir</button>
   </div>
-  <div id="folhas-area"></div>
+  <div id="pre"><div id="folhas-area"></div></div>
 
   <template id="tpl">
     <div class="cartao">
@@ -113,6 +113,23 @@
     const inp = document.getElementById('folhas');
     inp.addEventListener('input', () => desenhar(Math.max(1, Math.min(20, +inp.value || 1))));
     desenhar(+inp.value);
+
+    // No telemóvel: encolher a pré-visualização da folha A4 para caber no ecrã (não afeta a impressão)
+    const pre = document.getElementById('pre'), area = document.getElementById('folhas-area');
+    function ajustar() {
+      const k = Math.min(1, (innerWidth - 16) / 794);
+      if (k < 1) {
+        Object.assign(area.style, { width: '794px', transform: `scale(${k})`, transformOrigin: '0 0' });
+        Object.assign(pre.style, { height: `${area.offsetHeight * k}px`, overflow: 'hidden', marginLeft: '8px' });
+      } else {
+        area.removeAttribute('style'); pre.removeAttribute('style');
+      }
+    }
+    addEventListener('resize', ajustar);
+    addEventListener('beforeprint', () => { area.removeAttribute('style'); pre.removeAttribute('style'); });
+    addEventListener('afterprint', ajustar);
+    inp.addEventListener('input', ajustar);
+    ajustar();
   </script>
 </body>
 </html>

@@ -15,6 +15,10 @@
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 [hidden] { display: none !important; }
+:root { --vh: 1vh; }
+@supports (height: 1dvh) { :root { --vh: 1dvh; } }
+/* Campos de texto têm de aceitar seleção, senão o iOS não deixa escrever */
+input, textarea { -webkit-user-select: text; user-select: text; }
 html, body { margin: 0; height: 100%; }
 body {
   background: var(--papel);
@@ -96,7 +100,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .letreiro-txt {
   font-family: var(--deco);
-  font-size: clamp(48px, min(8vw, 11vh), 104px);
+  font-size: clamp(48px, min(8vw, calc(var(--vh) * 11)), 104px);
   line-height: 1;
   letter-spacing: .05em;
   color: #fff1c9;
@@ -115,8 +119,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 /* ── Cabine ─────────────────────────────────────────── */
 .cabine {
+  overscroll-behavior: none;
   --cortina-w: clamp(56px, 9vw, 120px);
-  --sanefa-h: clamp(46px, 7vh, 70px);
+  --sanefa-h: clamp(46px, calc(var(--vh) * 7), 70px);
   overflow: hidden; touch-action: manipulation;
   color: var(--papel);
   background:
@@ -126,10 +131,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .ecra {
   position: fixed; inset: 0;
   display: none; flex-direction: column;
-  align-items: center; justify-content: center;
+  align-items: center; justify-content: flex-start;
+  overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
   padding: calc(var(--sanefa-h) + 12px) calc(var(--cortina-w) + 12px) max(16px, env(safe-area-inset-bottom));
 }
 .ecra.ativo { display: flex; animation: aparecer .45s ease; }
+/* centrar sem cortar o topo quando não cabe */
+.ecra > :first-child { margin-top: auto; }
+.ecra > :last-child { margin-bottom: auto; }
 @keyframes aparecer { from { opacity: 0; } }
 
 /* Cenário */
@@ -160,7 +169,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .cortina.esq { left: 0; clip-path: polygon(0 0, 100% 0, 100% 42%, 52% 62%, 88% 100%, 0 100%); }
 .cortina.dir { right: 0; clip-path: polygon(0 0, 100% 0, 100% 100%, 12% 100%, 48% 62%, 0 42%); }
 .borla {
-  position: fixed; top: calc(62vh - 14px); z-index: 22; pointer-events: none;
+  position: fixed; top: calc(calc(var(--vh) * 62) - 14px); z-index: 22; pointer-events: none;
   width: 26px; height: 26px; border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, #fff2c2, #c39a45 55%, #7a5418);
   box-shadow: 0 3px 6px rgba(0,0,0,.5);
@@ -175,13 +184,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 /* 1. Início */
 .palco { display: flex; flex-direction: column; align-items: center; text-align: center; }
-.dos { margin: clamp(10px, 2vh, 22px) 0 0; font-style: italic; font-size: clamp(18px, 2.2vw, 24px); color: var(--rosa-claro); }
+.dos { margin: clamp(10px, calc(var(--vh) * 2), 22px) 0 0; font-style: italic; font-size: clamp(18px, 2.2vw, 24px); color: var(--rosa-claro); }
 .cabine .nomes {
-  font-size: clamp(50px, min(8vw, 11vh), 100px);
+  font-size: clamp(50px, min(8vw, calc(var(--vh) * 11)), 100px);
   color: #f3dfa6;
   text-shadow: 0 2px 0 rgba(0,0,0,.4);
 }
-.sub { margin: 4px 0 clamp(16px, 3.5vh, 34px); font-size: clamp(18px, 2.2vw, 23px); color: #e9dcc3; }
+.sub { margin: 4px 0 clamp(16px, calc(var(--vh) * 3.5), 34px); font-size: clamp(18px, 2.2vw, 23px); color: #e9dcc3; }
 .sub span { color: var(--rosa); margin: 0 .4em; font-size: .8em; }
 .bilhetes { display: flex; gap: clamp(18px, 4vw, 48px); justify-content: center; flex-wrap: wrap; }
 .bilhete {
@@ -215,7 +224,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .b-sub { font-style: italic; font-size: 19px; }
 .b-rodape { margin-top: 6px; padding-top: 6px; border-top: 1px solid color-mix(in srgb, var(--tinta-b) 30%, transparent);
   font-size: 12px; letter-spacing: .25em; text-transform: uppercase; font-weight: 600; opacity: .7; }
-.toque { margin: clamp(16px, 3.5vh, 30px) 0 0; font-size: 19px; font-style: italic; color: #cbb98f; animation: respirar 2.4s ease-in-out infinite; }
+.toque { margin: clamp(16px, calc(var(--vh) * 3.5), 30px) 0 0; font-size: 19px; font-style: italic; color: #cbb98f; animation: respirar 2.4s ease-in-out infinite; }
 @keyframes respirar { 50% { opacity: .45; } }
 
 /* 2. Câmara */
@@ -227,7 +236,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .luzes i.acesa { background: radial-gradient(circle at 35% 35%, #fffdf2, var(--lampada) 45%, #c98d1e); box-shadow: 0 0 10px 3px rgba(255,205,100,.75); }
 .visor {
   position: relative;
-  width: min(100%, calc((100vh - var(--sanefa-h) - 34px - 128px - 70px) * 4 / 3));
+  width: min(100%, calc((calc(var(--vh) * 100) - var(--sanefa-h) - 34px - 128px - 70px) * 4 / 3));
   aspect-ratio: 4 / 3;
   border: 12px solid;
   border-image: var(--ouro-metal) 1;
@@ -247,7 +256,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* Contagem "início de filme" */
 .leader { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 2; }
 .disco {
-  position: relative; width: min(52%, 58vh); aspect-ratio: 1; border-radius: 50%;
+  position: relative; width: min(52%, calc(var(--vh) * 58)); aspect-ratio: 1; border-radius: 50%;
   display: grid; place-items: center;
   background: rgba(20,15,10,.28);
   box-shadow: inset 0 0 0 5px rgba(255,255,255,.9), inset 0 0 0 22px transparent, inset 0 0 0 25px rgba(255,255,255,.55);
@@ -264,7 +273,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @keyframes varrer { from { transform: rotate(0); } to { transform: rotate(360deg); } }
 .disco span {
   position: relative; font-family: var(--deco); color: #fff; line-height: 1;
-  font-size: min(18vw, 26vh);
+  font-size: min(18vw, calc(var(--vh) * 26));
   text-shadow: 0 4px 24px rgba(0,0,0,.5);
 }
 .flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 3; }
@@ -302,7 +311,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   background: #050403;
   box-shadow: 0 0 0 5px #b8892f, 0 0 0 8px #120d0a, inset 0 6px 10px rgba(0,0,0,.9);
 }
-.saida { width: 210px; height: min(52vh, 520px); overflow: hidden; margin-top: -13px; }
+.saida { width: 210px; height: min(calc(var(--vh) * 52), 520px); overflow: hidden; margin-top: -13px; }
 .tira-sai {
   display: flex; flex-direction: column; gap: 10px; padding: 26px 14px 14px;
   background: var(--papel); box-shadow: 0 10px 30px rgba(0,0,0,.6);
@@ -328,7 +337,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .tira {
   display: block;
-  height: calc(100vh - var(--sanefa-h) - 70px); max-height: 960px; width: auto;
+  height: calc(calc(var(--vh) * 100) - var(--sanefa-h) - 70px); max-height: 960px; width: auto;
   box-shadow: 0 22px 50px rgba(0,0,0,.6);
   animation: imprimir 1.2s cubic-bezier(.2,.8,.3,1);
 }
@@ -352,7 +361,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .bilhete-qr .b-num { font-size: 16px; color: var(--turquesa-escuro); opacity: 1; }
 .bilhete-qr p { margin: 0; font-size: clamp(18px, 2vw, 22px); font-style: italic; line-height: 1.3; }
 .qr { padding: 12px; background: #fff; box-shadow: 0 0 0 3px var(--turquesa), 0 0 0 6px #f3ead7, 0 0 0 7.5px var(--dourado); }
-.qr svg { display: block; width: clamp(200px, min(25vw, 34vh), 300px); height: auto; }
+.qr svg { display: block; width: clamp(200px, min(25vw, calc(var(--vh) * 34)), 300px); height: auto; }
 .btn-vintage {
   padding: 12px 30px;
   background: var(--turquesa-escuro); color: #fff4d6;
@@ -366,7 +375,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @media (orientation: portrait) {
   .cabine { --cortina-w: clamp(40px, 7vw, 80px); }
   .final { flex-direction: column; gap: 22px; }
-  .tira { height: 46vh; }
+  .tira { height: calc(var(--vh) * 46); }
   .fio { left: -60%; right: -60%; }
   .lado-qr { flex-direction: row; align-items: center; gap: 22px; }
   .qr svg { width: 200px; }
@@ -374,26 +383,27 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 .estado-envio {
-  position: fixed; right: 14px; bottom: 12px; z-index: 30;
+  position: fixed; right: 14px; bottom: 12px; z-index: 30; pointer-events: none;
   padding: 6px 14px; border-radius: 999px;
   background: rgba(58,47,37,.85); color: #fff;
   font: 600 14px/1.3 -apple-system, system-ui, sans-serif;
 }
 .estado-envio.erro { background: rgba(170,60,60,.9); }
 .erro-global {
-  position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 31;
-  max-width: min(90vw, 640px); padding: 14px 20px; border-radius: 8px;
-  background: #a33; color: #fff;
-  font: 500 16px/1.4 -apple-system, system-ui, sans-serif;
+  position: fixed; left: 50%; top: max(12px, env(safe-area-inset-top)); transform: translateX(-50%); z-index: 31;
+  width: max-content; max-width: min(90vw, 640px); padding: 12px 18px; border-radius: 8px;
+  background: #a33; color: #fff; pointer-events: none;
+  font: 500 15px/1.4 -apple-system, system-ui, sans-serif;
 }
 
 /* ── Página dos convidados ──────────────────────────── */
 .letreiro.pequeno {
-  padding: 24px 40px 20px; margin-bottom: 18px;
+  max-width: 100%;
+  padding: 24px clamp(22px, 8vw, 40px) 20px; margin-bottom: 18px;
   box-shadow: inset 0 0 0 2px #d9b45e, inset 0 0 0 22px #1a130e, inset 0 0 0 23px #8c6424,
     0 0 0 3px #120d0a, 0 0 0 5px #b8892f, 0 14px 30px rgba(0,0,0,.35);
 }
-.letreiro.pequeno .letreiro-txt { font-size: clamp(34px, 10vw, 54px); }
+.letreiro.pequeno .letreiro-txt { font-size: clamp(28px, 9vw, 54px); }
 .letreiro.pequeno .lampada { width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; }
 .convidado {
   min-height: 100%;

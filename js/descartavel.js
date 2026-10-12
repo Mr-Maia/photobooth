@@ -17,7 +17,23 @@ function mostrarErro(msg) {
   clearTimeout(mostrarErro.t);
   mostrarErro.t = setTimeout(() => (el.hidden = true), 10_000);
 }
-window.addEventListener('unhandledrejection', (e) => mostrarErro(`Erro: ${e.reason?.message || e.reason}`));
+// Erros que o Safari lança por coisas normais (vídeo interrompido, etc.) — não interessam ao convidado
+const inofensivo = (r) => ['AbortError', 'NotAllowedError'].includes(r?.name) || /play\(\)|interrupted|ResizeObserver/i.test(r?.message || String(r));
+window.addEventListener('unhandledrejection', (e) => { if (!inofensivo(e.reason)) mostrarErro(`Erro: ${e.reason?.message || e.reason}`); });
+
+// Ecrãs que têm de caber inteiros (abertura e máquina): depois de rodar o telemóvel
+// ou de fechar o teclado, o iPhone às vezes deixa a página deslocada — voltar ao topo.
+function realinhar() {
+  if (document.activeElement?.tagName === 'INPUT') return; // a escrever: não mexer
+  const ativo = document.querySelector('.ecra-d.ativo')?.id;
+  if (ativo === 'abertura' || ativo === 'corpo') {
+    window.scrollTo(0, 0);
+    // o foco no campo do nome pode deslocar a própria secção (mesmo com overflow: hidden)
+    for (const el of document.querySelectorAll('#abertura, #palco, #corpo, .maquina-d')) el.scrollTop = el.scrollLeft = 0;
+  }
+}
+window.addEventListener('orientationchange', () => setTimeout(realinhar, 350));
+window.addEventListener('resize', () => setTimeout(realinhar, 100));
 
 // Textos
 document.querySelectorAll('[data-nomes]').forEach((el) => (el.textContent = cfg.nomes));
@@ -171,7 +187,12 @@ async function disparar() {
     rolo.porAvancar = rolo.tiradas < limite;
     gravarEstado();
     atualizarControlos();
-    await revelarEEnviar(canvas, rolo.tiradas, new Date());
+    try {
+      await revelarEEnviar(canvas, rolo.tiradas, new Date());
+    } catch (e) {
+      // nunca deixar a câmara encravada por causa do envio
+      console.error('Não foi possível preparar/guardar a foto', e);
+    }
 
     if (rolo.tiradas >= limite) {
       await esperar(900);
@@ -393,24 +414,29 @@ function iniciarAbertura() {
     tira.style.setProperty('--rasgado', `${rasgado}%`);
     $('#pack-tampa').style.transform = `rotate(${-rasgado * 0.05}deg)`;
     if (rasgado - ultimoSom > 4) { ultimoSom = rasgado; som.rasgar(); navigator.vibrate?.(3); }
-    if (rasgado >= 92 && !aberta) { aberta = true; abrirCaixa(); }
+    if (rasgado >= 96 && !aberta) { aberta = true; abrirCaixa(); }
   }
+  const posicao = (x) => { const r = tira.getBoundingClientRect(); return ((x - r.left) / r.width) * 100; };
   tira.addEventListener('pointerdown', (e) => {
     som.ativarSom();
     $('#pack').classList.add('a-rasgar');
-    arr = { x0: e.clientX, base: rasgado, moveu: false };
+    // Se o dedo começa perto da parte já rasgada, o rasgão segue o dedo; senão conta só o arrasto
+    arr = { x0: e.clientX, base: rasgado, seguir: posicao(e.clientX) <= rasgado + 18, moveu: false };
     tira.setPointerCapture(e.pointerId);
   });
   tira.addEventListener('pointermove', (e) => {
     if (!arr || aberta) return;
     const dx = e.clientX - arr.x0;
-    if (dx > 4) arr.moveu = true;
-    definir(arr.base + (dx / tira.getBoundingClientRect().width) * 100);
+    if (Math.abs(dx) > 4) arr.moveu = true;
+    const r = tira.getBoundingClientRect();
+    definir(Math.max(arr.base + (dx / r.width) * 100, arr.seguir ? posicao(e.clientX) : 0));
   });
-  tira.addEventListener('pointerup', async () => {
+  // Ao largar: um toque, ou já mais de metade rasgada, acaba de rasgar sozinho
+  const acabar = async () => { for (let p = rasgado; p <= 100 && !aberta; p += 5) { definir(p); await esperar(28); } };
+  tira.addEventListener('pointerup', () => {
     const tocou = arr && !arr.moveu;
     arr = null;
-    if (tocou) for (let p = rasgado; p <= 100 && !aberta; p += 5) { definir(p); await esperar(28); }
+    if (tocou || rasgado >= 55) acabar();
   });
   tira.addEventListener('pointercancel', () => (arr = null));
 }
@@ -444,6 +470,7 @@ function passoNome() {
     if (!input.value.trim()) { input.focus(); return; }
     input.blur();
     input.readOnly = true;
+    setTimeout(realinhar, 300); // o teclado fecha
     ok.hidden = true;
     rolo = novoRolo(input.value);
     gravarEstado();

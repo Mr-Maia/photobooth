@@ -25,7 +25,7 @@
           <span>câmara descartável · abrir aqui</span>
         </div>
         <div class="pack-tira" id="tira-rasgar" role="button" aria-label="Puxar a fita para abrir a caixa">
-          <span class="pack-tira-txt">puxar ——————→</span>
+          <div class="pack-tira-papel"><span class="pack-tira-txt">puxar ——————→</span></div>
           <i class="pack-puxador" id="puxador">puxar</i>
         </div>
         <div class="pack-frente">
@@ -86,6 +86,7 @@
       </div>
 
       <div class="visor-moldura">
+        <div class="visor-caixa">
         <div class="visor-d">
           <video id="video" playsinline muted autoplay></video>
           <div class="marcas" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
@@ -96,6 +97,7 @@
           </div>
         </div>
         <span class="fita fita-dono"><span id="dono" class="dono"></span></span>
+        </div>
       </div>
 
       <div class="cinta" aria-hidden="true"><span id="cinta-txt"></span></div>
