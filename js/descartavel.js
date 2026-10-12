@@ -55,7 +55,19 @@ function novoRolo(nome) {
   return { id, nome: limpo || 'Anónimo', tiradas: 0, porAvancar: false };
 }
 const pastaDoRolo = (r) => `${r.id}--${r.nome}`;
-const restantes = () => D.fotos - rolo.tiradas;
+
+// Limite de fotos desta câmara: 5 por defeito, mas os noivos podem dar mais na galeria
+let limite = D.fotos;
+const restantes = () => Math.max(0, limite - rolo.tiradas);
+async function atualizarLimite() {
+  if (!rolo) return;
+  try {
+    const r = await fetch(urlPublico(`descartavel-limites/${rolo.id}.json`), { cache: 'no-store' });
+    if (!r.ok) return; // ainda ninguém mexeu nesta câmara
+    const n = Number((await r.json()).fotos);
+    if (n >= 1 && n <= 99) limite = n;
+  } catch { /* sem rede ou Firebase por configurar: fica o limite que já sabíamos */ }
+}
 
 // ── Câmara ───────────────────────────────────────────────────
 const video = $('#video');
@@ -153,12 +165,12 @@ async function disparar() {
     f.classList.remove('disparar'); void f.offsetWidth; f.classList.add('disparar');
 
     rolo.tiradas += 1;
-    rolo.porAvancar = rolo.tiradas < D.fotos;
+    rolo.porAvancar = rolo.tiradas < limite;
     gravarEstado();
     atualizarControlos();
     await revelarEEnviar(canvas, rolo.tiradas, new Date());
 
-    if (rolo.tiradas >= D.fotos) {
+    if (rolo.tiradas >= limite) {
       await esperar(900);
       terminarRolo();
     }
@@ -225,7 +237,20 @@ function terminarRolo() {
   tick();
   clearInterval(contagemTimer);
   contagemTimer = setInterval(tick, 1000);
+  $('#mais').hidden = true;
+  clearInterval(maisTimer);
+  maisTimer = setInterval(async () => {
+    await atualizarLimite();
+    if (restantes() > 0) {
+      clearInterval(maisTimer);
+      $('#mais-txt').textContent = restantes() === 1
+        ? '🎉 Os noivos deram-te mais 1 foto!'
+        : `🎉 Os noivos deram-te mais ${restantes()} fotos!`;
+      $('#mais').hidden = false;
+    }
+  }, 15_000);
 }
+let maisTimer;
 
 aoMudarEstado(({ pendentes, erro }) => {
   const el = $('#envio');
@@ -358,8 +383,11 @@ $('#virar').addEventListener('click', () => {
   abrirCamara();
 });
 $('#aviso-repetir').addEventListener('click', abrirCamara);
+$('#mais-continuar').addEventListener('click', () => { som.ativarSom(); entrarNaMaquina(); });
 
 function entrarNaMaquina() {
+  clearInterval(maisTimer); clearInterval(contagemTimer);
+  $('#dono').textContent = rolo.nome;
   mostrar('corpo');
   atualizarControlos();
   abrirCamara();
@@ -367,9 +395,12 @@ function entrarNaMaquina() {
 
 processarFila(); // envia fotos que tenham ficado por enviar numa visita anterior
 
+// Sabe o limite atual antes de decidir o ecrã (no máximo 3 s à espera)
+await Promise.race([atualizarLimite(), esperar(3000)]);
+
 if (Date.now() >= revelacao) {
   mostrarRevelacao();
-} else if (rolo && rolo.tiradas >= D.fotos) {
+} else if (rolo && restantes() <= 0) {
   terminarRolo();
 } else if (rolo) {
   $('#nome').value = rolo.nome;

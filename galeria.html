@@ -9,14 +9,14 @@
   <link rel="icon" href="icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Great+Vibes&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Great+Vibes&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="convidado galeria">
   <header class="g-topo">
     <div>
       <h1 class="nomes" data-nomes>Carolina &amp; Miguel</h1>
-      <p class="pre">Galeria do photobooth</p>
+      <p class="pre">A nossa galeria</p>
     </div>
     <button id="sair" class="ligacao" hidden>Sair</button>
   </header>
@@ -29,21 +29,59 @@
     <p id="login-erro" class="g-erro" hidden></p>
   </section>
 
-  <!-- Galeria -->
   <section id="galeria" hidden>
-    <div class="g-barra">
-      <p id="resumo" class="g-resumo">A carregar…</p>
-      <div class="g-acoes">
-        <button id="tudo-pasta" class="btn" hidden>Guardar tudo numa pasta</button>
-        <button id="tudo-zip" class="btn">Descarregar tudo (ZIP)</button>
-        <button id="tiras-zip" class="btn sec">Só as tiras (ZIP)</button>
+    <nav class="g-tabs" role="tablist">
+      <button role="tab" data-tab="cabine" aria-selected="true">Cabine <span id="n-cabine"></span></button>
+      <button role="tab" data-tab="desc" aria-selected="false">Câmaras descartáveis <span id="n-desc"></span></button>
+    </nav>
+
+    <!-- Cabine -->
+    <div id="tab-cabine">
+      <div class="g-barra">
+        <p id="resumo" class="g-resumo">A carregar…</p>
+        <div class="g-acoes">
+          <button id="tudo-pasta" class="btn" hidden>Guardar tudo numa pasta</button>
+          <button id="tudo-zip" class="btn">Descarregar tudo (ZIP)</button>
+          <button id="tiras-zip" class="btn sec">Só as tiras (ZIP)</button>
+        </div>
       </div>
-      <div id="progresso" class="g-progresso" hidden><div><i></i></div><span></span></div>
+      <div id="sessoes" class="g-grelha"></div>
     </div>
-    <div id="sessoes" class="g-grelha"></div>
+
+    <!-- Câmaras descartáveis -->
+    <div id="tab-desc" hidden>
+      <div class="g-barra">
+        <p id="d-resumo" class="g-resumo">A carregar…</p>
+        <div class="g-acoes">
+          <button id="d-zip-tudo" class="btn">Descarregar todas (ZIP)</button>
+          <button id="d-atualizar" class="btn sec">Atualizar</button>
+        </div>
+      </div>
+      <p class="g-legenda">Escolham uma pessoa para ver só as fotos dela, dar-lhe mais fotos ou um rolo novo.</p>
+      <div id="pessoas" class="pessoas"></div>
+
+      <div id="painel" class="painel" hidden>
+        <div class="painel-info">
+          <span id="painel-nome" class="painel-nome"></span>
+          <span id="painel-uso" class="painel-uso"></span>
+          <div class="barra-uso"><i id="painel-barra"></i></div>
+        </div>
+        <div class="painel-acoes">
+          <button data-mais="1" class="btn sec">+1 foto</button>
+          <button data-mais="5" class="btn sec">+5 fotos</button>
+          <button id="painel-novo" class="btn sec">Rolo novo</button>
+          <button id="painel-zip" class="btn">Descarregar rolo</button>
+        </div>
+        <p id="painel-msg" class="painel-msg"></p>
+      </div>
+
+      <div id="d-grelha" class="d-grelha"></div>
+    </div>
+
+    <div id="progresso" class="g-progresso" hidden><div><i></i></div><span></span></div>
   </section>
 
-  <!-- Detalhe de uma sessão -->
+  <!-- Detalhe de uma sessão da cabine -->
   <dialog id="detalhe" class="g-detalhe">
     <button class="fechar" aria-label="Fechar">×</button>
     <div class="g-detalhe-corpo">
@@ -54,6 +92,18 @@
         <button id="d-descarregar" class="btn">Descarregar esta sessão</button>
       </div>
     </div>
+  </dialog>
+
+  <!-- Uma foto de câmara descartável -->
+  <dialog id="foto" class="g-foto">
+    <button class="fechar" aria-label="Fechar">×</button>
+    <img id="foto-img" alt="">
+    <div class="g-foto-barra">
+      <button id="foto-ant" class="seta" aria-label="Anterior">‹</button>
+      <span id="foto-legenda"></span>
+      <button id="foto-seg" class="seta" aria-label="Seguinte">›</button>
+    </div>
+    <button id="foto-guardar" class="btn">Guardar esta foto</button>
   </dialog>
 
   <script src="js/config.js"></script>

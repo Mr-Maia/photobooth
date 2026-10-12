@@ -3,7 +3,6 @@
   --plastico: #15807f;
   --plastico-claro: #23a3a0;
   --plastico-escuro: #0b5554;
-  --oswald: "Oswald", "Arial Narrow", sans-serif;
   min-height: 100%;
   background:
     radial-gradient(circle at 20% 0%, rgba(255,255,255,.18), transparent 45%),
@@ -52,15 +51,17 @@
 .regras { list-style: none; margin: 10px 0 18px; padding: 0; text-align: left; font-size: 19px; line-height: 1.35; }
 .regras li { position: relative; padding: 7px 0 7px 30px; border-bottom: 1px dashed rgba(44,34,25,.2); }
 .regras li::before { content: "✦"; position: absolute; left: 4px; top: 7px; color: var(--dourado); }
-.campo-nome { display: block; text-align: left; margin-bottom: 16px; }
-.campo-nome span { display: block; font-family: var(--oswald); font-size: 14px; letter-spacing: .15em; text-transform: uppercase; color: var(--turquesa-escuro); margin-bottom: 6px; }
+.campo-nome { display: block; text-align: left; margin-bottom: 18px; }
+.campo-nome span { display: block; font-family: var(--oswald); font-size: 14px; letter-spacing: .15em; text-transform: uppercase; color: var(--turquesa-escuro); margin-bottom: 2px; }
 .campo-nome input {
-  width: 100%; padding: 12px 14px;
-  font: 600 22px var(--serif); color: #2c2219;
-  background: #fff; border: 2px solid var(--turquesa); border-radius: 6px;
+  width: 100%; padding: 4px 6px 0;
+  font: 700 38px/1.2 var(--mao); color: var(--tinta-caneta);
+  background: transparent;
+  border: 0; border-bottom: 2px solid rgba(31,158,158,.55); border-radius: 0;
   outline: none;
 }
-.campo-nome input:focus { box-shadow: 0 0 0 3px var(--turquesa-claro); }
+.campo-nome input::placeholder { color: rgba(35,57,93,.32); font-weight: 500; }
+.campo-nome input:focus { border-bottom-color: var(--turquesa-escuro); }
 .btn-abrir {
   width: 100%; padding: 15px 20px;
   border: 0; border-radius: 6px;
@@ -79,13 +80,16 @@
 }
 .topo-d { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .etiqueta {
-  flex: 1; padding: 6px 14px 8px;
+  flex: 1; min-width: 0; padding: 6px 14px 4px;
   background: #f6efe1; color: var(--turquesa-escuro); border-radius: 6px;
   box-shadow: inset 0 0 0 2px var(--dourado);
   display: flex; flex-direction: column; line-height: 1;
 }
-.etiqueta .nomes { font-size: 32px; }
-.etiqueta small { font-family: var(--oswald); font-size: 11px; letter-spacing: .25em; color: var(--dourado-escuro); margin-top: 2px; }
+.etiqueta-linha { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.etiqueta .nomes { font-size: 24px; white-space: nowrap; }
+.etiqueta small { font-family: var(--oswald); font-size: 11px; letter-spacing: .2em; color: var(--dourado-escuro); }
+.etiqueta-dono { display: flex; align-items: baseline; gap: 8px; border-bottom: 1px dashed rgba(156,119,49,.6); }
+.dono { font: 700 30px/1.15 var(--mao); color: var(--tinta-caneta); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transform: rotate(-1.5deg); }
 .contador {
   position: relative; flex: none;
   width: 66px; height: 66px; border-radius: 50%;
@@ -225,7 +229,7 @@
 .rolo { background: #fff; padding: 14px 14px 16px; box-shadow: 0 8px 24px rgba(58,47,37,.15); border-top: 6px solid var(--turquesa); }
 .rolo.meu { border-top-color: var(--rosa); }
 .rolo-topo { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
-.rolo-topo h3 { margin: 0; font-family: var(--script); font-weight: 400; font-size: 36px; color: var(--turquesa-escuro); line-height: 1; }
+.rolo-topo h3 { margin: 0; font: 700 34px/1 var(--mao); color: var(--tinta-caneta); }
 .rolo-topo small { font-family: var(--oswald); font-size: 12px; letter-spacing: .15em; text-transform: uppercase; color: var(--dourado-escuro); }
 .rolo-zip { border: 0; background: none; color: var(--turquesa-escuro); text-decoration: underline; font-size: 16px; white-space: nowrap; }
 .contactos { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; padding: 8px; background: #1a1714; }
@@ -238,3 +242,6 @@
 .foto-d .fechar { position: absolute; top: 2px; right: 10px; border: 0; background: none; color: #fff; font-size: 34px; z-index: 1; }
 .foto-barra { display: flex; align-items: center; justify-content: space-between; margin: 10px 0; font-size: 18px; }
 .seta { border: 0; background: none; color: #fff; font-size: 40px; line-height: 1; padding: 0 12px; }
+
+.mais { margin: 0 0 16px; padding: 14px; border: 2px dashed var(--rosa); border-radius: 8px; background: rgba(231,155,176,.15); }
+.mais p { margin: 0 0 10px; font-size: 21px; font-weight: 600; }

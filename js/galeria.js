@@ -1,13 +1,17 @@
-// Galeria privada dos noivos: login Google, todas as sessões, descarregar tudo.
+// Galeria privada dos noivos: login Google, cabine + câmaras descartáveis,
+// filtrar por pessoa, dar mais fotos a uma câmara, descarregar tudo.
 import { firebaseConfigurado, urlPublico } from './storage.js';
+import { guardar } from './guardar.js';
 
 const FB_VER = '10.12.2';
 const cfg = window.PHOTOBOOTH_CONFIG;
+const D = cfg.descartavel;
 const $ = (s) => document.querySelector(s);
 document.querySelectorAll('[data-nomes]').forEach((el) => (el.textContent = cfg.nomes));
 
 const FICHEIROS = ['tira.jpg', 'foto-1.jpg', 'foto-2.jpg', 'foto-3.jpg', 'foto-4.jpg'];
-const SESSOES_POR_ZIP = 40; // ~150 MB por ZIP, para não rebentar a memória do browser
+const SESSOES_POR_ZIP = 40;  // ~150 MB por ZIP, para não rebentar a memória do browser
+const FOTOS_POR_ZIP = 250;   // idem, para as descartáveis
 
 let fb, sessoes = [];
 
@@ -54,13 +58,20 @@ async function iniciar() {
       return;
     }
     $('#login').hidden = true; $('#galeria').hidden = false;
-    await carregarSessoes();
+    await Promise.all([carregarSessoes(), carregarDescartaveis()]);
   });
 }
 
 function erroLogin(msg) { const el = $('#login-erro'); el.hidden = false; el.textContent = msg; }
 
-// ── Lista de sessões ─────────────────────────────────────────
+// Separadores
+document.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('[data-tab]').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
+  $('#tab-cabine').hidden = b.dataset.tab !== 'cabine';
+  $('#tab-desc').hidden = b.dataset.tab !== 'desc';
+}));
+
+// ══ Cabine ═══════════════════════════════════════════════════
 async function carregarSessoes() {
   try {
     const res = await fb.listAll(fb.ref(fb.storage, 'sessoes'));
@@ -70,6 +81,7 @@ async function carregarSessoes() {
     return;
   }
   const n = sessoes.length;
+  $('#n-cabine').textContent = n ? `(${n})` : '';
   $('#resumo').textContent = n
     ? `${n} ${n === 1 ? 'sessão' : 'sessões'} · ${n * 4} fotos`
     : 'Ainda não há fotos. Quando a cabine começar a trabalhar, aparecem aqui.';
@@ -102,7 +114,6 @@ async function carregarSessoes() {
   }
 }
 
-// ── Detalhe ──────────────────────────────────────────────────
 function abrirDetalhe(id) {
   $('#d-tira').src = url(id, 'tira.jpg');
   $('#d-hora').textContent = dataDe(id).toLocaleString('pt-PT', { dateStyle: 'long', timeStyle: 'short' });
@@ -113,19 +124,200 @@ function abrirDetalhe(id) {
     a.append(img);
     return a;
   }));
-  $('#d-descarregar').onclick = () => descarregarZip([id], FICHEIROS, `${cfg.nomes} - ${nomePasta(id)}`);
+  $('#d-descarregar').onclick = () => zipSessoes([id], FICHEIROS, `${cfg.nomes} - ${nomePasta(id)}`);
   $('#detalhe').showModal();
 }
 $('#detalhe .fechar').addEventListener('click', () => $('#detalhe').close());
 $('#detalhe').addEventListener('click', (e) => { if (e.target.id === 'detalhe') e.target.close(); });
 
-// ── Descargas ────────────────────────────────────────────────
-async function obter(id, f) {
-  const r = await fetch(url(id, f));
-  if (!r.ok) return null; // ficheiro ainda não chegou / sessão incompleta
-  return r.blob();
+// ══ Câmaras descartáveis ═════════════════════════════════════
+// rolos: [{ pasta, id, nome, fotos: ['01.jpg', …], limite }]
+let rolos = [], filtro = null, visiveis = [], atual = 0;
+const nomeDoRolo = (pasta) => pasta.split('--').slice(1).join('--') || 'Anónimo';
+const caminhoDesc = (r, f) => `descartavel/${r.pasta}/${f}`;
+
+// As fotos só ficam públicas depois da revelação; até lá usamos links com autorização
+const urls = new Map();
+function urlDesc(caminho) {
+  if (!urls.has(caminho)) urls.set(caminho, fb.getDownloadURL(fb.ref(fb.storage, caminho)));
+  return urls.get(caminho);
 }
 
+async function lerLimite(id) {
+  try {
+    const r = await fetch(urlPublico(`descartavel-limites/${id}.json`), { cache: 'no-store' });
+    if (r.ok) { const n = Number((await r.json()).fotos); if (n >= 1 && n <= 99) return n; }
+  } catch { /* ignora */ }
+  return D.fotos;
+}
+
+async function gravarLimite(rolo, n) {
+  n = Math.max(1, Math.min(99, n));
+  await fb.uploadString(
+    fb.ref(fb.storage, `descartavel-limites/${rolo.id}.json`),
+    JSON.stringify({ fotos: n, nome: rolo.nome, alterado: new Date().toISOString() }),
+    'raw',
+    { contentType: 'application/json', cacheControl: 'no-store' },
+  );
+  rolo.limite = n;
+}
+
+async function carregarDescartaveis() {
+  $('#d-resumo').textContent = 'A carregar…';
+  try {
+    const raiz = await fb.listAll(fb.ref(fb.storage, 'descartavel'));
+    rolos = await Promise.all(raiz.prefixes.map(async (p) => {
+      const r = await fb.listAll(p);
+      const id = p.name.split('--')[0];
+      return {
+        pasta: p.name, id, nome: nomeDoRolo(p.name),
+        fotos: r.items.map((i) => i.name).filter((n) => /^\d\d\.jpg$/.test(n)).sort(),
+        limite: await lerLimite(id),
+      };
+    }));
+  } catch (e) {
+    $('#d-resumo').textContent = `Não foi possível ler as câmaras (${e.code || e.message}).`;
+    return;
+  }
+  rolos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt'));
+  const total = rolos.reduce((s, r) => s + r.fotos.length, 0);
+  $('#n-desc').textContent = rolos.length ? `(${rolos.length})` : '';
+  $('#d-resumo').textContent = rolos.length
+    ? `${total} fotos de ${rolos.length} ${rolos.length === 1 ? 'câmara' : 'câmaras'}`
+    : 'Ainda ninguém usou as câmaras descartáveis.';
+  if (filtro && !rolos.some((r) => r.pasta === filtro)) filtro = null;
+  desenharPessoas();
+  desenharFotos();
+}
+
+function desenharPessoas() {
+  const cont = $('#pessoas');
+  cont.replaceChildren();
+  const chip = (texto, sub, pasta) => {
+    const b = document.createElement('button');
+    b.className = 'pessoa';
+    b.setAttribute('aria-pressed', String(filtro === pasta));
+    const n = document.createElement('span'); n.className = 'pessoa-nome'; n.textContent = texto;
+    const s = document.createElement('small'); s.textContent = sub;
+    b.append(n, s);
+    b.addEventListener('click', () => { filtro = pasta; desenharPessoas(); desenharFotos(); });
+    return b;
+  };
+  const total = rolos.reduce((s, r) => s + r.fotos.length, 0);
+  cont.append(chip('Todas', `${total} fotos`, null));
+  for (const r of rolos) {
+    const c = chip(r.nome, `${r.fotos.length}/${r.limite}`, r.pasta);
+    if (r.fotos.length >= r.limite) c.classList.add('cheia');
+    cont.append(c);
+  }
+  desenharPainel();
+}
+
+function desenharPainel() {
+  const r = rolos.find((x) => x.pasta === filtro);
+  $('#painel').hidden = !r;
+  if (!r) return;
+  $('#painel-nome').textContent = r.nome;
+  const usadas = r.fotos.length;
+  $('#painel-uso').textContent = usadas >= r.limite
+    ? `Usou as ${r.limite} fotos — rolo terminado`
+    : `${usadas} de ${r.limite} fotos usadas · faltam ${r.limite - usadas}`;
+  $('#painel-barra').style.width = `${Math.min(100, (100 * usadas) / r.limite)}%`;
+  $('#painel-msg').textContent = '';
+}
+
+async function mudarLimite(n, mensagem) {
+  const r = rolos.find((x) => x.pasta === filtro);
+  if (!r) return;
+  const botoes = document.querySelectorAll('.painel-acoes button');
+  botoes.forEach((b) => (b.disabled = true));
+  try {
+    await gravarLimite(r, n);
+    desenharPessoas();
+    $('#painel-msg').textContent = `${mensagem} O telemóvel de ${r.nome} atualiza sozinho em menos de um minuto.`;
+  } catch (e) {
+    $('#painel-msg').textContent = `Não foi possível gravar (${e.code || e.message}). Confirma as regras do Firebase.`;
+  } finally {
+    botoes.forEach((b) => (b.disabled = false));
+  }
+}
+document.querySelectorAll('[data-mais]').forEach((b) => b.addEventListener('click', () => {
+  const r = rolos.find((x) => x.pasta === filtro);
+  const k = Number(b.dataset.mais);
+  // Se já tinha terminado, as fotos extra contam a partir das que já tirou
+  const base = Math.max(r.limite, r.fotos.length);
+  mudarLimite(base + k, `✓ ${r.nome} tem agora ${base + k - r.fotos.length} ${base + k - r.fotos.length === 1 ? 'foto' : 'fotos'} por tirar.`);
+}));
+$('#painel-novo').addEventListener('click', () => {
+  const r = rolos.find((x) => x.pasta === filtro);
+  if (!confirm(`Dar um rolo novo a ${r.nome}? Fica com mais ${D.fotos} fotos (as que já tirou ficam guardadas).`)) return;
+  mudarLimite(r.fotos.length + D.fotos, `✓ Rolo novo: ${r.nome} tem ${D.fotos} fotos por tirar.`);
+});
+$('#painel-zip').addEventListener('click', () => {
+  const r = rolos.find((x) => x.pasta === filtro);
+  zipDescartaveis([r], `${cfg.nomes} - câmara de ${r.nome}`);
+});
+$('#d-zip-tudo').addEventListener('click', () => zipDescartaveis(rolos, `${cfg.nomes} - câmaras descartáveis`));
+$('#d-atualizar').addEventListener('click', carregarDescartaveis);
+
+// Miniaturas só carregam quando aparecem no ecrã
+const observador = new IntersectionObserver((entradas) => {
+  for (const e of entradas) {
+    if (!e.isIntersecting) continue;
+    observador.unobserve(e.target);
+    const img = e.target, caminho = img.dataset.caminho;
+    urlDesc(caminho.replace('.jpg', '-mini.jpg'))
+      .catch(() => urlDesc(caminho))
+      .then((u) => (img.src = u))
+      .catch(() => img.classList.add('falhou'));
+  }
+}, { rootMargin: '400px' });
+
+function desenharFotos() {
+  const cont = $('#d-grelha');
+  cont.replaceChildren();
+  visiveis = [];
+  for (const r of rolos) {
+    if (filtro && r.pasta !== filtro) continue;
+    for (const f of r.fotos) {
+      const idx = visiveis.length;
+      visiveis.push({ r, f });
+      const b = document.createElement('button');
+      b.className = 'd-foto';
+      const img = document.createElement('img');
+      img.alt = `${r.nome} ${f}`;
+      img.dataset.caminho = caminhoDesc(r, f);
+      observador.observe(img);
+      b.append(img);
+      if (!filtro) {
+        const quem = document.createElement('span');
+        quem.className = 'd-quem';
+        quem.textContent = r.nome;
+        b.append(quem);
+      }
+      b.addEventListener('click', () => abrirFoto(idx));
+      cont.append(b);
+    }
+  }
+}
+
+async function abrirFoto(i) {
+  atual = (i + visiveis.length) % visiveis.length;
+  const { r, f } = visiveis[atual];
+  $('#foto-legenda').textContent = `${r.nome} · foto ${Number(f.slice(0, 2))}`;
+  $('#foto-img').removeAttribute('src');
+  if (!$('#foto').open) $('#foto').showModal();
+  $('#foto-img').src = await urlDesc(caminhoDesc(r, f));
+}
+$('#foto-ant').addEventListener('click', () => abrirFoto(atual - 1));
+$('#foto-seg').addEventListener('click', () => abrirFoto(atual + 1));
+$('#foto .fechar').addEventListener('click', () => $('#foto').close());
+$('#foto-guardar').addEventListener('click', async () => {
+  const { r, f } = visiveis[atual];
+  guardar([{ url: await urlDesc(caminhoDesc(r, f)), nome: `${r.nome} - ${f}` }]);
+});
+
+// ══ Descargas ════════════════════════════════════════════════
 function progresso(feito, total, texto) {
   const el = $('#progresso');
   el.hidden = feito >= total;
@@ -137,23 +329,38 @@ let ocupado = false;
 async function tarefa(fn) {
   if (ocupado) return;
   ocupado = true;
-  document.querySelectorAll('.g-acoes button').forEach((b) => (b.disabled = true));
+  const botoes = document.querySelectorAll('.g-acoes button, #painel-zip, #d-descarregar');
+  botoes.forEach((b) => (b.disabled = true));
   try { await fn(); }
   catch (e) {
     if (e?.name !== 'AbortError') {
       console.error(e);
       alert(e instanceof TypeError
-        ? 'O browser bloqueou a descarga. Falta configurar o CORS do bucket (ver README, passo 5).'
+        ? 'O browser bloqueou a descarga. Falta configurar o CORS do bucket (ver README).'
         : `Erro: ${e.message}`);
     }
   } finally {
     ocupado = false;
     $('#progresso').hidden = true;
-    document.querySelectorAll('.g-acoes button').forEach((b) => (b.disabled = false));
+    botoes.forEach((b) => (b.disabled = false));
   }
 }
 
-function descarregarZip(ids, ficheiros, nome) {
+async function baixarZip(zip, nome) {
+  const conteudo = await zip.generateAsync({ type: 'blob', compression: 'STORE' }); // JPEG já vem comprimido
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(conteudo);
+  a.download = `${nome}.zip`;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 60_000);
+}
+
+async function obterBlob(u) {
+  const r = await fetch(u);
+  return r.ok ? r.blob() : null; // ficheiro ainda não chegou / sessão incompleta
+}
+
+function zipSessoes(ids, ficheiros, nome) {
   return tarefa(async () => {
     const partes = [];
     for (let i = 0; i < ids.length; i += SESSOES_POR_ZIP) partes.push(ids.slice(i, i + SESSOES_POR_ZIP));
@@ -164,18 +371,35 @@ function descarregarZip(ids, ficheiros, nome) {
       for (const id of partes[p]) {
         const pasta = ficheiros.length === 1 ? zip : zip.folder(nomePasta(id));
         await Promise.all(ficheiros.map(async (f) => {
-          const blob = await obter(id, f);
+          const blob = await obterBlob(url(id, f));
           if (blob) pasta.file(ficheiros.length === 1 ? `${nomePasta(id)}.jpg` : f, blob);
           progresso(++feito, total, `A juntar fotos… ${feito} / ${total}`);
         }));
       }
       progresso(feito, total + 1, partes.length > 1 ? `A criar o ZIP ${p + 1} de ${partes.length}…` : 'A criar o ZIP…');
-      const conteudo = await zip.generateAsync({ type: 'blob', compression: 'STORE' }); // JPEG já vem comprimido
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(conteudo);
-      a.download = partes.length > 1 ? `${nome} (parte ${p + 1} de ${partes.length}).zip` : `${nome}.zip`;
-      document.body.append(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(a.href), 60_000);
+      await baixarZip(zip, partes.length > 1 ? `${nome} (parte ${p + 1} de ${partes.length})` : nome);
+    }
+  });
+}
+
+function zipDescartaveis(lista, nome) {
+  return tarefa(async () => {
+    const todas = lista.flatMap((r) => r.fotos.map((f) => ({ r, f })));
+    const partes = [];
+    for (let i = 0; i < todas.length; i += FOTOS_POR_ZIP) partes.push(todas.slice(i, i + FOTOS_POR_ZIP));
+    let feito = 0;
+    for (let p = 0; p < partes.length; p++) {
+      const zip = new JSZip();
+      for (let i = 0; i < partes[p].length; i += 6) { // 6 de cada vez
+        await Promise.all(partes[p].slice(i, i + 6).map(async ({ r, f }) => {
+          const blob = await obterBlob(await urlDesc(caminhoDesc(r, f)));
+          const destino = lista.length === 1 ? f : `${r.nome} (${r.id})/${f}`;
+          if (blob) zip.file(destino, blob);
+          progresso(++feito, todas.length, `A juntar fotos… ${feito} / ${todas.length}`);
+        }));
+      }
+      progresso(feito, todas.length + 1, partes.length > 1 ? `A criar o ZIP ${p + 1} de ${partes.length}…` : 'A criar o ZIP…');
+      await baixarZip(zip, partes.length > 1 ? `${nome} (parte ${p + 1} de ${partes.length})` : nome);
     }
   });
 }
@@ -192,7 +416,7 @@ function guardarNumaPasta() {
       for (const f of FICHEIROS) {
         const existe = await dir.getFileHandle(f).then((h) => h.getFile()).then((x) => x.size > 0).catch(() => false);
         if (!existe) {
-          const blob = await obter(id, f);
+          const blob = await obterBlob(url(id, f));
           if (blob) {
             const w = await (await dir.getFileHandle(f, { create: true })).createWritable();
             await w.write(blob); await w.close();
@@ -206,7 +430,7 @@ function guardarNumaPasta() {
 }
 
 $('#tudo-pasta').addEventListener('click', guardarNumaPasta);
-$('#tudo-zip').addEventListener('click', () => descarregarZip(sessoes, FICHEIROS, `${cfg.nomes} - photobooth`));
-$('#tiras-zip').addEventListener('click', () => descarregarZip(sessoes, ['tira.jpg'], `${cfg.nomes} - tiras`));
+$('#tudo-zip').addEventListener('click', () => zipSessoes(sessoes, FICHEIROS, `${cfg.nomes} - photobooth`));
+$('#tiras-zip').addEventListener('click', () => zipSessoes(sessoes, ['tira.jpg'], `${cfg.nomes} - tiras`));
 
 iniciar();

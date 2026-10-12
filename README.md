@@ -90,7 +90,11 @@ São guardadas em `descartavel/<id>--<nome>/01.jpg … 05.jpg`.
 Na **hora da revelação**, o mesmo link passa a mostrar a galeria com os rolos de toda a gente,
 para ver e descarregar. As regras do Firebase garantem que ninguém vê nada antes dessa hora.
 
-⚠️ Se mudares o número de fotos ou a hora da revelação em `js/config.js`, muda também em `storage.rules`
+Na **galeria** (separador "Câmaras descartáveis") veem todas as câmaras, filtram por pessoa e podem
+dar **+1 / +5 fotos** ou um **rolo novo** a alguém. O limite fica em `descartavel-limites/<id>.json`
+e o telemóvel do convidado deteta-o sozinho (verifica de 15 em 15 s no ecrã de "rolo terminado").
+
+⚠️ Se mudares a hora da revelação em `js/config.js`, muda também em `storage.rules`
 (o comentário explica como calcular o valor) e volta a publicar as regras.
 
 ## Custos

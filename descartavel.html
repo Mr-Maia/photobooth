@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Great+Vibes&family=Limelight&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Caveat:wght@500;700&family=Great+Vibes&family=Limelight&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/descartavel.css">
 </head>
@@ -30,8 +30,8 @@
         <li>Revelação: <b data-revelacao></b>, aqui neste mesmo link</li>
       </ul>
       <label class="campo-nome" id="campo-nome">
-        <span>Como te chamas?</span>
-        <input id="nome" maxlength="30" autocomplete="given-name" placeholder="ex: Tia Fernanda" enterkeyhint="go">
+        <span>Esta câmara é de…</span>
+        <input id="nome" maxlength="30" autocomplete="given-name" placeholder="escreve o teu nome" enterkeyhint="go" spellcheck="false" autocapitalize="words">
       </label>
       <button id="abrir" class="btn-abrir">Abrir a câmara</button>
       <p class="iso">ISO 400 · Flash · <span data-fotos>5</span> EXP</p>
@@ -43,8 +43,8 @@
     <div class="maquina-d">
       <div class="topo-d">
         <div class="etiqueta">
-          <span class="nomes" data-nomes>Carolina &amp; Miguel</span>
-          <small>ISO 400 · <span data-fotos>5</span> EXP</small>
+          <div class="etiqueta-linha"><span class="nomes" data-nomes>Carolina &amp; Miguel</span><small>ISO 400</small></div>
+          <div class="etiqueta-dono"><small>de</small><span id="dono" class="dono"></span></div>
         </div>
         <div class="contador" aria-live="polite"><span id="restantes">5</span></div>
       </div>
@@ -81,6 +81,10 @@
       <p class="envelope-txt">As tuas fotos seguiram para revelação.<br>Ninguém as vê antes de <b data-revelacao></b> — nem tu! 🙈</p>
       <div class="falta" id="falta"></div>
       <p id="envio-fim" class="envio-fim"></p>
+      <div id="mais" class="mais" hidden>
+        <p id="mais-txt"></p>
+        <button id="mais-continuar" class="btn-abrir">Continuar a fotografar</button>
+      </div>
       <p class="envelope-pe">Volta a este link (ou lê o código da mesa) depois da revelação para veres as fotos de toda a gente.</p>
     </div>
   </section>

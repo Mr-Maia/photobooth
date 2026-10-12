@@ -26,7 +26,7 @@ window.PHOTOBOOTH_CONFIG = {
 
   // Câmara descartável (descartavel.html — QR nas mesas, nos telemóveis dos convidados)
   descartavel: {
-    fotos: 5,                                   // ⚠️ se mudares, muda também em storage.rules
+    fotos: 5,                                   // por pessoa (na galeria podem dar mais a alguém)
     revelacao: '2027-06-13T12:00:00+01:00',    // ⚠️ igual em storage.rules (em milissegundos)
     pedirNome: true,
   },

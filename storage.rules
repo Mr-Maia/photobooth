@@ -36,17 +36,28 @@ service firebase.storage {
     }
 
     // ── Câmara descartável ───────────────────────────────
-    // Pasta por convidado: "<id do telemóvel>--<nome>", fotos 01..05 (+ miniatura).
+    // Pasta por convidado: "<id do telemóvel>--<nome>", fotos 01, 02, … (+ miniatura).
+    // O limite de cada pessoa (5 por defeito) é controlado pela página e pode ser
+    // aumentado na galeria dos noivos; aqui só se trava nas 99.
     match /descartavel/{rolo}/{ficheiro} {
       allow get: if revelado() || noivos();
       allow create: if rolo.matches('^[a-z0-9]{8}--[^/]{1,40}$')
-                    && ficheiro.matches('^0[1-5](-mini)?[.]jpg$')  // ⚠️ 5 fotos por pessoa
+                    && ficheiro.matches('^(0[1-9]|[1-9][0-9])(-mini)?[.]jpg$')
                     && request.resource.contentType == 'image/jpeg'
                     && request.resource.size < 6 * 1024 * 1024;
       allow update, delete: if false;
     }
     match /descartavel/{caminho=**} {
       allow list: if revelado() || noivos();
+    }
+
+    // Limite de fotos de cada câmara ({"fotos": 10}), definido pelos noivos na galeria.
+    // O telemóvel do convidado lê-o para saber quantas fotos ainda tem.
+    match /descartavel-limites/{ficheiro} {
+      allow get: if ficheiro.matches('^[a-z0-9]{8}[.]json$');
+      allow write: if noivos()
+                   && ficheiro.matches('^[a-z0-9]{8}[.]json$')
+                   && request.resource.size < 1024;
     }
   }
 }
