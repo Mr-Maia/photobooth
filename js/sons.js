@@ -173,3 +173,66 @@ export function roloPronto() {
   estalo({ t, dur: 0.03, freq: 2200, q: 2, vol: 0.7 });
   tom({ t, freq: 220, freqFim: 120, dur: 0.06, vol: 0.15, forma: 'square' });
 }
+
+// ── Abrir a câmara pela primeira vez ─────────────────────────
+
+// Um pedaço de cartão a rasgar (chamado várias vezes enquanto se arrasta)
+export function rasgar() {
+  if (!pronto()) return;
+  const t = ctx.currentTime;
+  estalo({ t, dur: 0.03 + Math.random() * 0.05, freq: 1400 + Math.random() * 2600, q: 0.8, vol: 0.28 + Math.random() * 0.2 });
+}
+
+// A tampa da caixa a soltar-se
+export function tampaFora() {
+  if (!pronto()) return;
+  const t = ctx.currentTime;
+  for (let i = 0; i < 7; i++) estalo({ t: t + i * 0.035, dur: 0.06, freq: 1200 + Math.random() * 3000, q: 0.7, vol: 0.4 });
+  estalo({ t: t + 0.2, dur: 0.4, freq: 900, q: 0.5, vol: 0.12 });
+}
+
+// A câmara a sair da caixa / a ser pousada
+export function pousar() {
+  if (!pronto()) return;
+  const t = ctx.currentTime;
+  tom({ t, freq: 110, freqFim: 55, dur: 0.18, vol: 0.3 });
+  estalo({ t, dur: 0.08, freq: 500, q: 1, tipo: 'lowpass', vol: 0.4 });
+}
+
+// Plástico a rodar na mão
+export function virar() {
+  if (!pronto()) return;
+  const t = ctx.currentTime;
+  estalo({ t, dur: 0.25, freq: 2500, q: 0.4, vol: 0.12 });
+  estalo({ t: t + 0.22, dur: 0.03, freq: 1800, q: 2, vol: 0.4 });
+}
+
+// Flash a carregar enquanto se segura o botão: devolve { parar(ok) }
+export function carregarFlash(segundos) {
+  if (!pronto()) return { parar() {} };
+  const t = ctx.currentTime;
+  const o = ctx.createOscillator();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(900, t);
+  o.frequency.exponentialRampToValueAtTime(7200, t + segundos);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.06, t + 0.15);
+  o.connect(g).connect(mestre);
+  o.start(t);
+  return {
+    parar(ok) {
+      const t2 = ctx.currentTime;
+      g.gain.cancelScheduledValues(t2);
+      g.gain.setValueAtTime(g.gain.value, t2);
+      if (!ok) { // largou cedo: o assobio cai
+        o.frequency.cancelScheduledValues(t2);
+        o.frequency.setValueAtTime(o.frequency.value, t2);
+        o.frequency.exponentialRampToValueAtTime(300, t2 + 0.25);
+      }
+      g.gain.exponentialRampToValueAtTime(0.0001, t2 + (ok ? 0.6 : 0.25));
+      o.stop(t2 + 0.7);
+      if (ok) tom({ t: t2, freq: 2400, dur: 0.06, vol: 0.08, forma: 'square' });
+    },
+  };
+}

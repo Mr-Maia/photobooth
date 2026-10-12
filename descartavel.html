@@ -17,27 +17,60 @@
 </head>
 <body class="descartavel">
 
-  <!-- 1. A caixa do rolo: regras + nome -->
-  <section id="caixa" class="ecra-d">
-    <div class="caixa">
-      <div class="caixa-topo">
-        <span>Câmara descartável</span>
-        <span class="iso">400</span>
+  <!-- 1. Abertura: rasgar a caixa, escrever o nome, carregar o flash -->
+  <section id="abertura" class="ecra-d">
+    <div class="palco" id="palco">
+      <div class="pack" id="pack">
+        <div class="pack-tampa" id="pack-tampa">
+          <span>câmara descartável · abrir aqui</span>
+        </div>
+        <div class="pack-tira" id="tira-rasgar" role="button" aria-label="Puxar a fita para abrir a caixa">
+          <span class="pack-tira-txt">puxar ——————→</span>
+          <i class="pack-puxador" id="puxador">puxar</i>
+        </div>
+        <div class="pack-frente">
+          <div class="pack-topo"><span>Câmara descartável</span><b>400</b></div>
+          <p class="pack-nomes" data-nomes>Carolina &amp; Miguel</p>
+          <svg class="pack-desenho" viewBox="0 0 180 100" aria-hidden="true">
+            <rect x="6" y="18" width="168" height="76" rx="6" />
+            <rect x="140" y="10" width="22" height="8" rx="2" />
+            <rect x="112" y="26" width="52" height="22" rx="2" />
+            <line x1="118" y1="28" x2="118" y2="46" /><line x1="126" y1="28" x2="126" y2="46" /><line x1="134" y1="28" x2="134" y2="46" /><line x1="142" y1="28" x2="142" y2="46" /><line x1="150" y1="28" x2="150" y2="46" /><line x1="158" y1="28" x2="158" y2="46" />
+            <rect x="66" y="26" width="18" height="12" rx="2" />
+            <circle cx="52" cy="62" r="22" /><circle cx="52" cy="62" r="13" /><circle cx="52" cy="62" r="5" />
+          </svg>
+          <ul class="pack-letras">
+            <li><b data-fotos>5</b> exposições</li>
+            <li>flash · cor · iso 400</li>
+            <li>sem ver · sem apagar</li>
+            <li>revelação: <b data-revelacao></b></li>
+          </ul>
+          <div class="pack-riscas"></div>
+        </div>
       </div>
-      <h1 class="caixa-nomes"><span data-nomes>Carolina &amp; Miguel</span></h1>
-      <p class="caixa-sub"><span data-fotos>5</span> exp. &nbsp;/&nbsp; flash &nbsp;/&nbsp; cor</p>
 
-      <ol class="instrucoes">
-        <li>Tens <b data-fotos>5</b> fotografias. Não há segundas tentativas.</li>
-        <li>Não dá para ver nem apagar.</li>
-        <li>Revelação: <b data-revelacao></b>. Neste mesmo link.</li>
-      </ol>
+      <div class="cf" id="cf">
+        <div class="cf-topo"><i class="cf-disparo"></i></div>
+        <div class="cf-corpo">
+          <div class="cf-banda"><span>C&amp;M</span></div>
+          <div class="cf-riscas"></div>
+          <div class="cf-visor"></div>
+          <div class="cf-flash" id="cf-flash"></div>
+          <button class="cf-btn-flash" id="btn-flash" aria-label="Carregar o flash"><span>flash</span></button>
+          <i class="cf-led" id="led"></i>
+          <div class="cf-lente"><i></i></div>
+          <span class="cf-exp"><b data-fotos>5</b> exp · 400</span>
+          <label class="cf-etiqueta" id="campo-nome">
+            <small>nome</small>
+            <input id="nome" maxlength="24" autocomplete="given-name" placeholder="" enterkeyhint="done" spellcheck="false" autocapitalize="words">
+          </label>
+        </div>
+      </div>
+    </div>
 
-      <label class="campo-nome" id="campo-nome">
-        <span>Nome</span>
-        <span class="fita"><input id="nome" maxlength="30" autocomplete="given-name" placeholder="escreve aqui" enterkeyhint="go" spellcheck="false" autocapitalize="words"></span>
-      </label>
-      <button id="abrir" class="btn-cru">Abrir a câmara →</button>
+    <div class="passos">
+      <p class="passo"><b id="passo-n">01</b><span id="passo-txt">puxa a fita para abrir a caixa</span></p>
+      <button id="passo-ok" class="btn-cru" hidden>feito →</button>
     </div>
   </section>
 

@@ -82,7 +82,10 @@ gcloud storage cp -r gs://O-TEU-BUCKET/sessoes ./fotos-casamento
 (também dá para ver e descarregar uma a uma na Consola Firebase → Storage.)
 
 ## Câmara descartável (`descartavel.html`)
-Nas mesas há um cartão com QR (imprimir em `cartao-mesa.html`). Cada convidado escreve o nome e tem
+Nas mesas há um cartão com QR (imprimir em `cartao-mesa.html`).
+Da primeira vez, o convidado "desembrulha" a câmara: rasga a fita da caixa, escreve o nome na etiqueta,
+segura o botão do flash até a luz acender e vira a câmara. O contador começa em "S" e só passa às fotos
+depois de rodar o rolo até travar. Quem volta ao link entra direto na máquina. Cada convidado escreve o nome e tem
 **5 fotos**, sem as ver nem apagar. Depois de cada foto tem de rodar a roda para avançar o rolo.
 As fotos levam um efeito de rolo barato com flash e a data carimbada a laranja.
 São guardadas em `descartavel/<id>--<nome>/01.jpg … 05.jpg`.

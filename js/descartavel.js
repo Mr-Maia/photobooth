@@ -1,7 +1,7 @@
 // Câmara descartável nos telemóveis dos convidados.
 // Cada pessoa tem N fotos, não as vê nem apaga; tudo é revelado à hora marcada.
 import { filmeDescartavel } from './effects.js';
-import { enfileirar, processarFila, aoMudarEstado, firebase, urlPublico } from './storage.js';
+import { enfileirar, processarFila, aoMudarEstado, firebase, urlPublico, firebaseConfigurado } from './storage.js';
 import { guardar } from './guardar.js';
 import * as som from './sons.js';
 
@@ -52,7 +52,8 @@ function novoRolo(nome) {
   const abc = 'abcdefghjkmnpqrstuvwxyz23456789';
   const id = [...crypto.getRandomValues(new Uint8Array(8))].map((b) => abc[b % abc.length]).join('');
   const limpo = nome.normalize('NFC').replace(/[/#[\]*?\u0000-\u001f\u007f]/g, '').replace(/\s+/g, ' ').trim().slice(0, 30);
-  return { id, nome: limpo || 'Anónimo', tiradas: 0, porAvancar: false };
+  // Câmara nova: o contador está em "S" e é preciso rodar o rolo pela primeira vez
+  return { id, nome: limpo || 'Anónimo', tiradas: 0, porAvancar: true, primeiro: true };
 }
 const pastaDoRolo = (r) => `${r.id}--${r.nome}`;
 
@@ -60,7 +61,7 @@ const pastaDoRolo = (r) => `${r.id}--${r.nome}`;
 let limite = D.fotos;
 const restantes = () => Math.max(0, limite - rolo.tiradas);
 async function atualizarLimite() {
-  if (!rolo) return;
+  if (!rolo || !firebaseConfigurado) return;
   try {
     const r = await fetch(urlPublico(`descartavel-limites/${rolo.id}.json`), { cache: 'no-store' });
     if (!r.ok) return; // ainda ninguém mexeu nesta câmara
@@ -135,13 +136,15 @@ async function revelarEEnviar(canvas, numero, quando) {
 // ── Interface da máquina ─────────────────────────────────────
 function atualizarControlos() {
   const el = $('#restantes');
-  el.textContent = restantes();
+  el.textContent = rolo.primeiro ? 'S' : restantes();
   $('.contador').classList.remove('mudou'); void el.offsetWidth; $('.contador').classList.add('mudou');
   $('#disparar').classList.toggle('bloqueado', rolo.porAvancar);
   $('#roda').classList.toggle('avancar', rolo.porAvancar);
   const dica = $('#dica');
   dica.classList.toggle('avancar', rolo.porAvancar);
-  dica.textContent = rolo.porAvancar
+  dica.textContent = rolo.primeiro
+    ? 'primeira vez: roda o rolo até travar ↓'
+    : rolo.porAvancar
     ? 'roda o rolo para baixo →'
     : restantes() === 1 ? 'última fotografia.' : 'aponta e dispara';
 }
@@ -188,8 +191,10 @@ function avancarDente() {
   som.catraca();
   navigator.vibrate?.(4);
 }
+const volta = () => (rolo.primeiro ? VOLTA * 2.2 : VOLTA);
 function rolarPronto() {
   rolo.porAvancar = false;
+  rolo.primeiro = false;
   gravarEstado();
   som.roloPronto();
   atualizarControlos();
@@ -208,14 +213,14 @@ roda.addEventListener('pointermove', (e) => {
   arrasto.acumulado += d; arrasto.dente += d;
   if (arrasto.acumulado > 6) arrasto.moveu = true;
   while (arrasto.dente >= DENTE) { arrasto.dente -= DENTE; avancarDente(); }
-  if (arrasto.acumulado >= VOLTA) { arrasto = null; rolarPronto(); }
+  if (arrasto.acumulado >= volta()) { arrasto = null; rolarPronto(); }
 });
 roda.addEventListener('pointerup', async () => {
   if (!arrasto) return;
   const tocou = !arrasto.moveu;
   arrasto = null;
   if (tocou && rolo.porAvancar) { // toque simples: a roda avança sozinha
-    for (let i = 0; i < 9; i++) { avancarDente(); await esperar(55); }
+    for (let i = 0; i < volta() / DENTE; i++) { avancarDente(); await esperar(55); }
     rolarPronto();
   }
 });
@@ -371,16 +376,142 @@ async function descarregarRolo(r, botao) {
   }
 }
 
-// ── Arranque ─────────────────────────────────────────────────
-$('#abrir').addEventListener('click', async () => {
-  som.ativarSom();
-  if (!rolo) {
-    rolo = novoRolo($('#nome').value);
-    gravarEstado();
+// ── Abertura: a primeira vez que se abre a câmara ────────────
+function passo(n, txt) {
+  $('#passo-n').textContent = String(n).padStart(2, '0');
+  $('#passo-txt').textContent = txt;
+}
+
+// 1. Rasgar a fita da caixa (arrastar para a direita; um toque também serve)
+function iniciarAbertura() {
+  mostrar('abertura');
+  passo(1, 'puxa a fita para abrir a caixa');
+  const tira = $('#tira-rasgar');
+  let arr = null, rasgado = 0, ultimoSom = 0, aberta = false;
+  function definir(p) {
+    rasgado = Math.max(rasgado, Math.min(100, p));
+    tira.style.setProperty('--rasgado', `${rasgado}%`);
+    $('#pack-tampa').style.transform = `rotate(${-rasgado * 0.05}deg)`;
+    if (rasgado - ultimoSom > 4) { ultimoSom = rasgado; som.rasgar(); navigator.vibrate?.(3); }
+    if (rasgado >= 92 && !aberta) { aberta = true; abrirCaixa(); }
   }
-  entrarNaMaquina();
-});
-$('#nome').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#abrir').click(); });
+  tira.addEventListener('pointerdown', (e) => {
+    som.ativarSom();
+    $('#pack').classList.add('a-rasgar');
+    arr = { x0: e.clientX, base: rasgado, moveu: false };
+    tira.setPointerCapture(e.pointerId);
+  });
+  tira.addEventListener('pointermove', (e) => {
+    if (!arr || aberta) return;
+    const dx = e.clientX - arr.x0;
+    if (dx > 4) arr.moveu = true;
+    definir(arr.base + (dx / tira.getBoundingClientRect().width) * 100);
+  });
+  tira.addEventListener('pointerup', async () => {
+    const tocou = arr && !arr.moveu;
+    arr = null;
+    if (tocou) for (let p = rasgado; p <= 100 && !aberta; p += 5) { definir(p); await esperar(28); }
+  });
+  tira.addEventListener('pointercancel', () => (arr = null));
+}
+
+// A tampa salta, a câmara sai da caixa e a caixa cai
+async function abrirCaixa() {
+  const palco = $('#palco');
+  $('#pack-tampa').style.transform = '';
+  som.tampaFora();
+  palco.classList.add('rasgada');
+  await esperar(450);
+  som.virar();
+  palco.classList.add('a-sair');
+  await esperar(750);
+  palco.classList.add('fora');
+  await esperar(650);
+  som.pousar();
+  navigator.vibrate?.(15);
+  if (D.pedirNome) passoNome();
+  else { rolo = novoRolo(''); gravarEstado(); passoFlash(); }
+}
+
+// 2. Escrever o nome na etiqueta da câmara
+function passoNome() {
+  passo(2, 'escreve o teu nome na etiqueta da câmara');
+  const et = $('#campo-nome'), input = $('#nome'), ok = $('#passo-ok');
+  et.classList.add('chamar');
+  ok.hidden = false;
+  input.addEventListener('focus', () => et.classList.remove('chamar'), { once: true });
+  const confirmar = () => {
+    if (!input.value.trim()) { input.focus(); return; }
+    input.blur();
+    input.readOnly = true;
+    ok.hidden = true;
+    rolo = novoRolo(input.value);
+    gravarEstado();
+    passoFlash();
+  };
+  ok.onclick = confirmar;
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmar(); });
+}
+
+// 3. Carregar o flash: segurar o botão até a luz acender
+function passoFlash() {
+  passo(3, 'carrega no botão do flash e segura até a luz acender');
+  const b = $('#btn-flash'), led = $('#led');
+  const SEG = 1.8;
+  let carga = null;
+  b.classList.add('chamar');
+  b.oncontextmenu = (e) => e.preventDefault();
+  b.onpointerdown = (e) => {
+    e.preventDefault();
+    som.ativarSom();
+    b.setPointerCapture(e.pointerId);
+    b.classList.add('premido');
+    b.classList.remove('chamar');
+    const t0 = performance.now();
+    carga = { s: som.carregarFlash(SEG), raf: 0 };
+    const tick = () => {
+      const p = Math.min(1, (performance.now() - t0) / (SEG * 1000));
+      led.style.setProperty('--carga', p);
+      if (p >= 1) {
+        carga.s.parar(true);
+        carga = null;
+        b.onpointerdown = b.onpointerup = b.onpointercancel = null;
+        b.classList.remove('premido');
+        led.classList.add('aceso');
+        navigator.vibrate?.(25);
+        flashPronto();
+        return;
+      }
+      carga.raf = requestAnimationFrame(tick);
+    };
+    carga.raf = requestAnimationFrame(tick);
+  };
+  const soltar = () => {
+    if (!carga) return;
+    cancelAnimationFrame(carga.raf);
+    carga.s.parar(false);
+    carga = null;
+    b.classList.remove('premido');
+    b.classList.add('chamar');
+    led.style.setProperty('--carga', 0);
+    passo(3, 'tens de segurar até a luz acender. outra vez.');
+  };
+  b.onpointerup = soltar;
+  b.onpointercancel = soltar;
+}
+
+// 4. Virar a câmara: daqui em diante é a máquina, vista por trás
+async function flashPronto() {
+  passo(4, 'flash pronto. agora vira a câmara.');
+  await esperar(1000);
+  som.virar();
+  $('#cf').classList.add('virar');
+  await esperar(400);
+  entrarNaMaquina(true);
+}
+
+// ── Arranque ─────────────────────────────────────────────────
+document.addEventListener('pointerdown', () => som.ativarSom()); // o iOS só deixa haver som depois de um toque
 $('#disparar').addEventListener('click', disparar);
 $('#virar').addEventListener('click', () => {
   lado = lado === 'user' ? 'environment' : 'user';
@@ -389,9 +520,10 @@ $('#virar').addEventListener('click', () => {
 $('#aviso-repetir').addEventListener('click', abrirCamara);
 $('#mais-continuar').addEventListener('click', () => { som.ativarSom(); entrarNaMaquina(); });
 
-function entrarNaMaquina() {
+function entrarNaMaquina(virada = false) {
   clearInterval(maisTimer); clearInterval(contagemTimer);
   $('#dono').textContent = rolo.nome;
+  $('#corpo').classList.toggle('entrar-virada', virada);
   mostrar('corpo');
   atualizarControlos();
   abrirCamara();
@@ -404,13 +536,10 @@ await Promise.race([atualizarLimite(), esperar(3000)]);
 
 if (Date.now() >= revelacao) {
   mostrarRevelacao();
-} else if (rolo && restantes() <= 0) {
+} else if (rolo && !rolo.primeiro && restantes() <= 0) {
   terminarRolo();
 } else if (rolo) {
-  $('#nome').value = rolo.nome;
-  $('#campo-nome').hidden = true;
-  $('#abrir').textContent = `Continuar → ${restantes()} ${restantes() === 1 ? 'restante' : 'restantes'}`;
-  mostrar('caixa');
+  entrarNaMaquina();
 } else {
-  mostrar('caixa');
+  iniciarAbertura();
 }
