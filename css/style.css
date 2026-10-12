@@ -396,6 +396,96 @@ button { font: inherit; color: inherit; cursor: pointer; }
   font: 500 15px/1.4 -apple-system, system-ui, sans-serif;
 }
 
+/* ── Cabine num telemóvel deitado ───────────────────── */
+@media (orientation: landscape) and (max-height: 500px) {
+  .cabine { --cortina-w: clamp(28px, 5.5vw, 52px); --sanefa-h: 30px; }
+  .sanefa > div {
+    -webkit-mask:
+      linear-gradient(#000, #000) top / 100% calc(100% - 14px) no-repeat,
+      radial-gradient(circle 15px at 50% 0, #000 96%, transparent) bottom / 30px 14px repeat-x;
+            mask:
+      linear-gradient(#000, #000) top / 100% calc(100% - 14px) no-repeat,
+      radial-gradient(circle 15px at 50% 0, #000 96%, transparent) bottom / 30px 14px repeat-x;
+  }
+  .sanefa-veludo { bottom: 4px !important; }
+  .borla { width: 18px; height: 18px; top: calc(calc(var(--vh) * 62) - 9px); }
+  .borla::after { top: 14px; width: 16px; height: 30px; }
+  .borla.esq { left: calc(var(--cortina-w) * .52 - 9px); }
+  .borla.dir { right: calc(var(--cortina-w) * .52 - 9px); }
+  .ecra { padding: calc(var(--sanefa-h) + 8px) calc(var(--cortina-w) + 10px) max(8px, env(safe-area-inset-bottom)); }
+  .estado-envio { font-size: 10px; padding: 3px 9px; right: 8px; top: 4px; bottom: auto; z-index: 30; } /* em cima, sobre a sanefa */
+
+  /* Início: letreiro e nomes à esquerda, bilhetes empilhados à direita */
+  .palco {
+    display: grid; align-items: center; justify-items: center; column-gap: clamp(16px, 4vw, 40px);
+    grid-template-columns: auto auto;
+    grid-template-areas: "letreiro bilhetes" "dos bilhetes" "nomes bilhetes" "sub bilhetes" "toque bilhetes";
+  }
+  .letreiro { grid-area: letreiro; padding: 16px 26px 13px; }
+  .letreiro-pre { font-size: 10px; }
+  .letreiro-txt { font-size: clamp(26px, min(6vw, calc(var(--vh) * 11)), 44px); }
+  .lampada { width: 8px; height: 8px; margin: -4px 0 0 -4px; }
+  .dos { grid-area: dos; margin: 8px 0 0; font-size: 14px; }
+  .cabine .nomes { grid-area: nomes; font-size: clamp(30px, min(6vw, calc(var(--vh) * 12)), 50px); }
+  .sub { grid-area: sub; margin: 2px 0 0; font-size: 13px; }
+  .toque { grid-area: toque; margin: 8px 0 0; font-size: 13px; }
+  .bilhetes { grid-area: bilhetes; flex-direction: column; flex-wrap: nowrap; gap: clamp(8px, calc(var(--vh) * 3), 16px); }
+  .bilhete { width: clamp(170px, 27vw, 230px); padding: 6px 14px; }
+  .bilhete-in { padding: 6px 6px 5px; }
+  .b-num { font-size: 9px; }
+  .b-titulo { font-size: clamp(17px, calc(var(--vh) * 5.5), 24px); }
+  .b-sub { font-size: 13px; }
+  .b-rodape { font-size: 9px; margin-top: 3px; padding-top: 3px; }
+
+  /* Câmara: visor com a altura toda, rolo de película na vertical ao lado */
+  .cabine { --h-util: calc(var(--vh) * 100 - var(--sanefa-h) - 8px - 26px - 6px - 10px); }
+  #camara.ativo {
+    display: grid; justify-content: center; align-content: center; column-gap: 14px; row-gap: 6px;
+    grid-template-columns: auto auto; grid-template-areas: "topo topo" "visor pelicula";
+  }
+  #camara > :first-child, #camara > :last-child { margin: 0; }
+  .cabine-topo { grid-area: topo; justify-self: center; height: 26px; }
+  .pose { font-size: 16px; }
+  .luzes i { width: 11px; height: 11px; }
+  .visor { grid-area: visor; width: auto; height: var(--h-util); border-width: 8px; }
+  .disco { width: min(46%, calc(var(--vh) * 50)); }
+  .disco span { font-size: calc(var(--vh) * 28); }
+  .pelicula {
+    grid-area: pelicula; flex-direction: column; justify-content: center;
+    height: var(--h-util); padding: 10px 16px; gap: 8px;
+  }
+  .pelicula::before, .pelicula::after {
+    top: 6px; bottom: 6px; left: auto; right: auto; width: 6px; height: auto;
+    background: repeating-linear-gradient(180deg, transparent 0 6px, #d8cdb6 6px 13px, transparent 13px 19px);
+  }
+  .pelicula::before { left: 4px; }
+  .pelicula::after { right: 4px; }
+  .pelicula > * { height: calc((var(--h-util) - 20px - 24px) / 4); width: auto; }
+
+  /* A revelar */
+  #revelar { gap: 10px; }
+  .ranhura { width: 190px; height: 18px; }
+  .saida { width: 130px; height: calc(var(--vh) * 100 - var(--sanefa-h) - 90px); margin-top: -9px; }
+  .tira-sai { gap: 6px; padding: 16px 9px 9px; }
+  .revelar-txt { font-size: 18px; }
+
+  /* Final: tira à esquerda, QR (o maior possível) e Terminar à direita */
+  .cabine { --h-final: calc(var(--vh) * 100 - var(--sanefa-h) - 8px - 12px); }
+  .final { gap: clamp(18px, 5vw, 48px); }
+  .fio { top: 4px; }
+  .tira { height: calc(var(--h-final) - 10px); max-height: none; }
+  .mola { width: 14px; height: 34px; margin-left: -7px; top: -6px; }
+  .lado-qr { gap: 10px; }
+  .bilhete-qr { padding: 8px; }
+  .bilhete-qr-in { padding: 10px 14px 8px; gap: 6px; }
+  .bilhete-qr .b-num { font-size: 11px; }
+  .bilhete-qr p { font-size: 12px; }
+  .bilhete-qr p br { display: none; }
+  .qr { padding: 6px; }
+  .qr svg { width: calc(var(--h-final) - 128px); min-width: 120px; }
+  .btn-vintage { padding: 7px 18px; font-size: 14px; box-shadow: 0 0 0 3px var(--turquesa-escuro), 0 4px 0 3px #0b4848; }
+}
+
 /* ── Página dos convidados ──────────────────────────── */
 .letreiro.pequeno {
   max-width: 100%;
