@@ -631,3 +631,31 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .g-foto-barra { display: flex; align-items: center; justify-content: space-between; margin: 10px 0; font: 700 24px var(--mao); }
 .g-foto .seta { border: 0; background: none; color: #fff; font-size: 40px; line-height: 1; padding: 0 12px; }
 .g-foto .btn { width: 100%; }
+
+/* Custos (galeria) */
+.custos { margin: 16px 0 4px; background: #fff; border-left: 6px solid var(--turquesa); box-shadow: 0 6px 18px rgba(58,47,37,.1); }
+.custos.acima { border-left-color: var(--dourado); }
+.custos.passou { border-left-color: #c0475f; }
+.custos summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 4px 16px; padding: 14px 18px; }
+.custos summary::-webkit-details-marker { display: none; }
+.custo-titulo { font-family: var(--oswald); font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: var(--turquesa-escuro); }
+.custo-titulo small { font-size: 12px; color: #8a7b66; letter-spacing: .08em; margin-left: 6px; }
+.custo-titulo::after { content: "▾"; margin-left: 8px; color: #8a7b66; display: inline-block; transition: transform .2s; }
+.custos[open] .custo-titulo::after { transform: rotate(180deg); }
+#custo-total { font-family: var(--serif); font-size: 30px; line-height: 1; color: var(--tinta); }
+.custo-escala { grid-column: 1 / -1; }
+.custo-pista { position: relative; height: 12px; border-radius: 6px; background: var(--turquesa-claro); overflow: hidden; }
+.custo-pista i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--dourado), #c0475f); transition: width .4s; }
+.custo-marcas { display: flex; justify-content: space-between; margin-top: 4px; font-size: 14px; color: #8a7b66; }
+.custo-estado { grid-column: 1 / -1; font-size: 17px; font-style: italic; color: var(--turquesa-escuro); }
+.custos.acima .custo-estado { color: var(--dourado-escuro); }
+.custos.passou .custo-estado { color: #a33; }
+.custo-detalhe { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 20px; padding: 0 18px 16px; }
+.medidor p { margin: 0 0 4px; font-size: 16px; }
+.medidor div { height: 8px; border-radius: 4px; background: var(--papel-2); overflow: hidden; }
+.medidor i { display: block; height: 100%; width: 0; background: var(--turquesa); transition: width .4s; }
+.medidor.alerta i { background: var(--dourado); }
+.medidor span { display: block; margin-top: 3px; font-size: 14px; color: #6b5d4e; }
+.custo-nota { grid-column: 1 / -1; margin: 0; font-size: 15px; font-style: italic; color: #6b5d4e; }
+.custo-nota a { color: var(--turquesa-escuro); }
+.medidor.passou i { background: #c0475f; }

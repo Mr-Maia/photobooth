@@ -2,6 +2,7 @@
 // filtrar por pessoa, dar mais fotos a uma câmara, descarregar tudo.
 import { firebaseConfigurado, urlPublico } from './storage.js';
 import { guardar } from './guardar.js';
+import { listarTudo, atualizarCustos } from './custos.js';
 
 const FB_VER = '10.12.2';
 const cfg = window.PHOTOBOOTH_CONFIG;
@@ -58,7 +59,7 @@ async function iniciar() {
       return;
     }
     $('#login').hidden = true; $('#galeria').hidden = false;
-    await Promise.all([carregarSessoes(), carregarDescartaveis()]);
+    await carregarTudo();
   });
 }
 
@@ -71,11 +72,19 @@ document.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click
   $('#tab-desc').hidden = b.dataset.tab !== 'desc';
 }));
 
+// Lista os ficheiros da cabine e das descartáveis e atualiza os custos
+let caminhosSessoes = [], caminhosDesc = [];
+const token = () => fb.auth.currentUser.getIdToken();
+async function carregarTudo() {
+  await Promise.all([carregarSessoes(), carregarDescartaveis()]);
+  atualizarCustos(await token(), [...caminhosSessoes, ...caminhosDesc]);
+}
+
 // ══ Cabine ═══════════════════════════════════════════════════
 async function carregarSessoes() {
   try {
-    const res = await fb.listAll(fb.ref(fb.storage, 'sessoes'));
-    sessoes = res.prefixes.map((p) => p.name).filter((n) => /^[0-9]{12}-/.test(n)).sort().reverse();
+    caminhosSessoes = await listarTudo(await token(), 'sessoes/');
+    sessoes = [...new Set(caminhosSessoes.map((c) => c.split('/')[1]))].filter((n) => /^[0-9]{12}-/.test(n)).sort().reverse();
   } catch (e) {
     $('#resumo').textContent = `Não foi possível ler as fotos (${e.code}). Confirma os emails em storage.rules.`;
     return;
@@ -165,15 +174,16 @@ async function gravarLimite(rolo, n) {
 async function carregarDescartaveis() {
   $('#d-resumo').textContent = 'A carregar…';
   try {
-    const raiz = await fb.listAll(fb.ref(fb.storage, 'descartavel'));
-    rolos = await Promise.all(raiz.prefixes.map(async (p) => {
-      const r = await fb.listAll(p);
-      const id = p.name.split('--')[0];
-      return {
-        pasta: p.name, id, nome: nomeDoRolo(p.name),
-        fotos: r.items.map((i) => i.name).filter((n) => /^\d\d\.jpg$/.test(n)).sort(),
-        limite: await lerLimite(id),
-      };
+    caminhosDesc = await listarTudo(await token(), 'descartavel/');
+    const pastas = new Map();
+    for (const c of caminhosDesc) {
+      const [, pasta, f] = c.split('/');
+      if (!pastas.has(pasta)) pastas.set(pasta, []);
+      if (/^\d\d\.jpg$/.test(f)) pastas.get(pasta).push(f);
+    }
+    rolos = await Promise.all([...pastas].map(async ([pasta, fotos]) => {
+      const id = pasta.split('--')[0];
+      return { pasta, id, nome: nomeDoRolo(pasta), fotos: fotos.sort(), limite: await lerLimite(id) };
     }));
   } catch (e) {
     $('#d-resumo').textContent = `Não foi possível ler as câmaras (${e.code || e.message}).`;
@@ -258,7 +268,7 @@ $('#painel-zip').addEventListener('click', () => {
   zipDescartaveis([r], `${cfg.nomes} - câmara de ${r.nome}`);
 });
 $('#d-zip-tudo').addEventListener('click', () => zipDescartaveis(rolos, `${cfg.nomes} - câmaras descartáveis`));
-$('#d-atualizar').addEventListener('click', carregarDescartaveis);
+$('#d-atualizar').addEventListener('click', carregarTudo);
 
 // Miniaturas só carregam quando aparecem no ecrã
 const observador = new IntersectionObserver((entradas) => {

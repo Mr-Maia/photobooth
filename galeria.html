@@ -30,6 +30,27 @@
   </section>
 
   <section id="galeria" hidden>
+    <details id="custos" class="custos" hidden>
+      <summary>
+        <span class="custo-titulo">Custo estimado <small>1.º ano</small></span>
+        <b id="custo-total">0,00 €</b>
+        <div class="custo-escala">
+          <div class="custo-pista"><i id="custo-barra"></i></div>
+          <div class="custo-marcas"><span>0 € · objetivo</span><span>2 € · meta</span></div>
+        </div>
+        <span id="custo-estado" class="custo-estado"></span>
+      </summary>
+      <div class="custo-detalhe">
+        <div class="medidor" id="m-espaco"><p>Espaço guardado</p><div><i></i></div><span></span></div>
+        <div class="medidor" id="m-envios"><p>Envios no mês mais cheio</p><div><i></i></div><span></span></div>
+        <div class="medidor" id="m-descarga"><p>Descargas (estimativa)</p><div><i></i></div><span></span></div>
+        <p id="custo-nota" class="custo-nota"></p>
+        <p class="custo-nota">O espaço e os envios são medidos; as descargas são estimadas (cada foto vista ~3 vezes).
+          Os valores reais estão na <a href="https://console.firebase.google.com/project/carolina-e-miguel/usage/details" target="_blank" rel="noopener">consola do Firebase</a>.
+          Há um alerta por email se passar os 2 €.</p>
+      </div>
+    </details>
+
     <nav class="g-tabs" role="tablist">
       <button role="tab" data-tab="cabine" aria-selected="true">Cabine <span id="n-cabine"></span></button>
       <button role="tab" data-tab="desc" aria-selected="false">Câmaras descartáveis <span id="n-desc"></span></button>
