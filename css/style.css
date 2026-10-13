@@ -671,3 +671,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .acesso-email { font-size: 19px; font-weight: 600; overflow-wrap: anywhere; }
 .acesso-lista small { font-size: 14px; color: #8a7b66; }
 .acesso-lista .btn { margin: 0; width: auto; flex: none; font-size: 16px; padding: 7px 14px; }
+.btn.perigo { background: #fff; color: #a33; border: 2px solid #d9a0a0; box-shadow: 0 4px 0 #f1d6d6; }
+.g-foto .btn.perigo { margin-top: 8px; background: transparent; color: #f2b8b8; border-color: #7a3a3a; box-shadow: none; }
+.g-detalhe .btn.perigo { margin-left: 8px; }

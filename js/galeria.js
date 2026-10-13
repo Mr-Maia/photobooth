@@ -191,6 +191,7 @@ function abrirDetalhe(id) {
     a.append(img);
     return a;
   }));
+  $('#d-apagar').dataset.id = id;
   $('#d-descarregar').onclick = () => zipSessoes([id], FICHEIROS, `${cfg.nomes} - ${nomePasta(id)}`);
   $('#detalhe').showModal();
 }
@@ -251,7 +252,7 @@ async function carregarDescartaveis() {
   const total = rolos.reduce((s, r) => s + r.fotos.length, 0);
   $('#n-desc').textContent = rolos.length ? `(${rolos.length})` : '';
   $('#d-resumo').textContent = rolos.length
-    ? `${total} fotos de ${rolos.length} ${rolos.length === 1 ? 'câmara' : 'câmaras'}`
+    ? `${total} ${total === 1 ? 'foto' : 'fotos'} de ${rolos.length} ${rolos.length === 1 ? 'câmara' : 'câmaras'}`
     : 'Ainda ninguém usou as câmaras descartáveis.';
   if (filtro && !rolos.some((r) => r.pasta === filtro)) filtro = null;
   desenharPessoas();
@@ -272,7 +273,7 @@ function desenharPessoas() {
     return b;
   };
   const total = rolos.reduce((s, r) => s + r.fotos.length, 0);
-  cont.append(chip('Todas', `${total} fotos`, null));
+  cont.append(chip('Todas', `${total} ${total === 1 ? 'foto' : 'fotos'}`, null));
   for (const r of rolos) {
     const c = chip(r.nome, `${r.fotos.length}/${r.limite}`, r.pasta);
     if (r.fotos.length >= r.limite) c.classList.add('cheia');
@@ -383,6 +384,47 @@ $('#foto .fechar').addEventListener('click', () => $('#foto').close());
 $('#foto-guardar').addEventListener('click', async () => {
   const { r, f } = visiveis[atual];
   guardar([{ url: await urlDesc(caminhoDesc(r, f)), nome: `${r.nome} - ${f}` }]);
+});
+
+// ══ Apagar ═══════════════════════════════════════════════════
+// Só funciona para quem está na lista de acesso (regras do Storage). Não há caixote do lixo.
+async function apagar(caminhos, pergunta) {
+  if (!confirm(`${pergunta}\n\nNão dá para desfazer.`)) return false;
+  let falhou = 0;
+  for (let i = 0; i < caminhos.length; i += 8) {
+    await Promise.all(caminhos.slice(i, i + 8).map((c) => fb.deleteObject(fb.ref(fb.storage, c))
+      .catch((e) => { if (e.code !== 'storage/object-not-found') { falhou++; console.error(c, e); } })));
+  }
+  if (falhou) alert(`Não foi possível apagar ${falhou} ${falhou === 1 ? 'ficheiro' : 'ficheiros'}. Tenta outra vez.`);
+  return true;
+}
+
+$('#d-apagar').addEventListener('click', async () => {
+  const id = $('#d-apagar').dataset.id;
+  const caminhos = caminhosSessoes.filter((c) => c.startsWith(`sessoes/${id}/`));
+  if (await apagar(caminhos, `Apagar a sessão das ${horaCurta(id)} (${caminhos.length} ficheiros)?`)) {
+    $('#detalhe').close();
+    carregarTudo();
+  }
+});
+
+$('#painel-apagar').addEventListener('click', async () => {
+  const r = rolos.find((x) => x.pasta === filtro);
+  const caminhos = caminhosDesc.filter((c) => c.startsWith(`descartavel/${r.pasta}/`));
+  if (await apagar([...caminhos, `descartavel-limites/${r.id}.json`],
+    `Apagar a câmara de ${r.nome} e as ${r.fotos.length} ${r.fotos.length === 1 ? 'foto' : 'fotos'}?`)) {
+    filtro = null;
+    carregarTudo();
+  }
+});
+
+$('#foto-apagar').addEventListener('click', async () => {
+  const { r, f } = visiveis[atual];
+  const base = caminhoDesc(r, f);
+  if (await apagar([base, base.replace('.jpg', '-mini.jpg')], `Apagar a foto ${Number(f.slice(0, 2))} de ${r.nome}?`)) {
+    $('#foto').close();
+    carregarTudo();
+  }
 });
 
 // ══ Descargas ════════════════════════════════════════════════

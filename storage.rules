@@ -4,7 +4,7 @@ rules_version = '2';
 //  - Cabine: qualquer pessoa com o link (QR) VÊ as fotos dessa sessão.
 //  - Câmara descartável: qualquer pessoa ENVIA fotos; ninguém as vê até à revelação.
 //  - Só quem está na lista de acesso (login Google) consegue LISTAR tudo, a qualquer momento.
-//  - Ninguém consegue apagar nem reescrever fotos.
+//  - Ninguém consegue reescrever fotos; só quem tem acesso à galeria as pode apagar.
 service firebase.storage {
   match /b/{bucket}/o {
 
@@ -29,7 +29,8 @@ service firebase.storage {
                     && ficheiro.matches('^(tira|tira-mini|foto-[1-4])[.]jpg$')
                     && request.resource.contentType == 'image/jpeg'
                     && request.resource.size < 12 * 1024 * 1024;
-      allow update, delete: if false;
+      allow delete: if noivos();
+      allow update: if false;
     }
     match /sessoes/{caminho=**} {
       allow list: if noivos();
@@ -45,7 +46,8 @@ service firebase.storage {
                     && ficheiro.matches('^(0[1-9]|[1-9][0-9])(-mini)?[.]jpg$')
                     && request.resource.contentType == 'image/jpeg'
                     && request.resource.size < 6 * 1024 * 1024;
-      allow update, delete: if false;
+      allow delete: if noivos();
+      allow update: if false;
     }
     match /descartavel/{caminho=**} {
       allow list: if revelado() || noivos();
@@ -58,6 +60,7 @@ service firebase.storage {
       allow write: if noivos()
                    && ficheiro.matches('^[a-z0-9]{8}[.]json$')
                    && request.resource.size < 1024;
+      allow delete: if noivos() && ficheiro.matches('^[a-z0-9]{8}[.]json$');
     }
   }
 }
