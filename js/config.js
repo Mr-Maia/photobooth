@@ -13,11 +13,11 @@ window.PHOTOBOOTH_CONFIG = {
 
   // Configuração do Firebase (Consola Firebase → Definições do projeto → As tuas apps → Web)
   firebase: {
-    apiKey: '',
-    authDomain: '',
-    projectId: '',
-    storageBucket: '',              // ex: 'casamento-cm.firebasestorage.app'
-    appId: '',
+    apiKey: 'AIzaSyBxAAZaRd8suLw98wXZYLF6WBtf6joAKjY',
+    authDomain: 'carolina-e-miguel.firebaseapp.com',
+    projectId: 'carolina-e-miguel',
+    storageBucket: 'carolina-e-miguel.firebasestorage.app',
+    appId: '1:708146884848:web:398726a5ac90b0ad565235',
   },
 
   // Quem pode entrar na galeria (galeria.html) com a conta Google.
