@@ -22,7 +22,7 @@ window.PHOTOBOOTH_CONFIG = {
 
   // Quem pode entrar na galeria (galeria.html) com a conta Google.
   // ⚠️ Tem de ser igual à lista em storage.rules — é lá que a segurança é verificada.
-  emailsNoivos: ['EMAIL-DA-CAROLINA@gmail.com', 'EMAIL-DO-MIGUEL@gmail.com'],
+  emailsNoivos: ['mr.joaomaia@gmail.com'],
 
   // Câmara descartável (descartavel.html — QR nas mesas, nos telemóveis dos convidados)
   descartavel: {

@@ -12,7 +12,7 @@ service firebase.storage {
     function noivos() {
       return request.auth != null
           && request.auth.token.email_verified == true
-          && request.auth.token.email in ['EMAIL-DA-CAROLINA@gmail.com', 'EMAIL-DO-MIGUEL@gmail.com'];
+          && request.auth.token.email in ['mr.joaomaia@gmail.com'];
     }
 
     // ⚠️ Hora da revelação da câmara descartável, em milissegundos desde 1970.
