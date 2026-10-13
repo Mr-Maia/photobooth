@@ -120,8 +120,8 @@ Login com Google, todas as sessões por hora, e descarregar uma sessão, só as 
 (ZIP em partes, ou direto para uma pasta no Chrome do computador).
 1. Firebase → Authentication → Começar → ativar o fornecedor **Google**.
 2. Authentication → Definições → **Domínios autorizados** → adicionar `o-teu-utilizador.github.io`.
-3. Mete os vossos emails Google em `emailsNoivos` no `js/config.js` **e** em `storage.rules`,
-   e volta a publicar as regras (`firebase deploy --only storage`).
+3. Quem entra na galeria gere-se na própria galeria, separador **Acesso** (lista guardada em
+   Firestore, coleção `acesso`, consultada pelas regras do Storage). Regras: `firebase deploy --only storage,firestore:rules`.
 
 ## Personalizar
 - Nomes, data, hashtag, número de fotos e tempos: `js/config.js`

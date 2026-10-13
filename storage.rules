@@ -3,16 +3,16 @@ rules_version = '2';
 // Regras do Firebase Storage.
 //  - Cabine: qualquer pessoa com o link (QR) VÊ as fotos dessa sessão.
 //  - Câmara descartável: qualquer pessoa ENVIA fotos; ninguém as vê até à revelação.
-//  - Só os noivos (login Google) conseguem LISTAR tudo, a qualquer momento.
+//  - Só quem está na lista de acesso (login Google) consegue LISTAR tudo, a qualquer momento.
 //  - Ninguém consegue apagar nem reescrever fotos.
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // ⚠️ Emails Google dos noivos (os mesmos de emailsNoivos em js/config.js)
+    // Quem tem acesso à galeria: lista em Firestore (/acesso/<email>), gerida na própria galeria
     function noivos() {
       return request.auth != null
           && request.auth.token.email_verified == true
-          && request.auth.token.email in ['mr.joaomaia@gmail.com'];
+          && firestore.exists(/databases/(default)/documents/acesso/$(request.auth.token.email));
     }
 
     // ⚠️ Hora da revelação da câmara descartável, em milissegundos desde 1970.

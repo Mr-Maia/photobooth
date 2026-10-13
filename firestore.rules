@@ -1,0 +1,28 @@
+rules_version = '2';
+
+// Lista de quem tem acesso à galeria dos noivos: um documento por email em /acesso.
+// Quem está na lista pode adicionar e remover outras pessoas (mas não a si próprio,
+// para a lista nunca ficar vazia). As regras do Storage consultam esta lista.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function temAcesso() {
+      return request.auth != null
+          && request.auth.token.email_verified == true
+          && exists(/databases/$(database)/documents/acesso/$(request.auth.token.email));
+    }
+
+    match /acesso/{email} {
+      // Cada pessoa pode ver se ela própria tem acesso; quem tem acesso vê a lista toda
+      allow read: if temAcesso() || (request.auth != null && request.auth.token.email == email);
+      allow create: if temAcesso()
+                    && email == email.lower()
+                    && email.matches('^[^@/ ]+@[^@/ ]+[.][^@/ ]+$')
+                    && request.resource.data.keys().hasOnly(['adicionadoPor', 'em'])
+                    && request.resource.data.adicionadoPor == request.auth.token.email
+                    && request.resource.data.em == request.time;
+      allow delete: if temAcesso() && email != request.auth.token.email;
+      allow update: if false;
+    }
+  }
+}

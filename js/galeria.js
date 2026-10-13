@@ -40,8 +40,9 @@ async function iniciar() {
   const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-app.js`);
   const auth = await import(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-auth.js`);
   const st = await import(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-storage.js`);
+  const fs = await import(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-firestore.js`);
   const app = initializeApp(cfg.firebase, 'galeria');
-  fb = { auth: auth.getAuth(app), storage: st.getStorage(app), ...auth, ...st };
+  fb = { auth: auth.getAuth(app), storage: st.getStorage(app), db: fs.getFirestore(app), ...auth, ...st, ...fs };
 
   $('#entrar').addEventListener('click', async () => {
     try { await fb.signInWithPopup(fb.auth, new fb.GoogleAuthProvider()); }
@@ -52,14 +53,16 @@ async function iniciar() {
   fb.onAuthStateChanged(fb.auth, async (user) => {
     $('#sair').hidden = !user;
     if (!user) { $('#login').hidden = false; $('#galeria').hidden = true; return; }
-    const autorizado = cfg.emailsNoivos.map((e) => e.toLowerCase()).includes(user.email?.toLowerCase());
+    let autorizado = false;
+    try { autorizado = (await fb.getDoc(fb.doc(fb.db, 'acesso', user.email.toLowerCase()))).exists(); }
+    catch (e) { console.error(e); }
     if (!autorizado) {
       $('#login').hidden = false; $('#galeria').hidden = true;
       erroLogin(`A conta ${user.email} não tem acesso a esta galeria.`);
       return;
     }
     $('#login').hidden = true; $('#galeria').hidden = false;
-    await carregarTudo();
+    await Promise.all([carregarTudo(), carregarAcesso()]);
   });
 }
 
@@ -70,7 +73,62 @@ document.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click
   document.querySelectorAll('[data-tab]').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
   $('#tab-cabine').hidden = b.dataset.tab !== 'cabine';
   $('#tab-desc').hidden = b.dataset.tab !== 'desc';
+  $('#tab-acesso').hidden = b.dataset.tab !== 'acesso';
 }));
+
+// ══ Acesso ═══════════════════════════════════════════════════
+// Lista em Firestore (/acesso/<email>); as regras do Storage consultam-na.
+async function carregarAcesso() {
+  const eu = fb.auth.currentUser.email.toLowerCase();
+  let docs;
+  try { docs = (await fb.getDocs(fb.collection(fb.db, 'acesso'))).docs; }
+  catch (e) { $('#acesso-msg').textContent = `Não foi possível ler a lista (${e.code || e.message}).`; return; }
+  $('#n-acesso').textContent = `(${docs.length})`;
+  const lista = $('#acesso-lista');
+  lista.replaceChildren(...docs.sort((a, b) => a.id.localeCompare(b.id)).map((d) => {
+    const li = document.createElement('li');
+    const info = document.createElement('div');
+    const email = document.createElement('span'); email.className = 'acesso-email'; email.textContent = d.id;
+    const sub = document.createElement('small');
+    const { adicionadoPor, em } = d.data();
+    sub.textContent = d.id === eu ? 'és tu'
+      : `adicionado por ${adicionadoPor || '—'}${em ? ` · ${em.toDate().toLocaleDateString('pt-PT')}` : ''}`;
+    info.append(email, sub);
+    li.append(info);
+    if (d.id !== eu) {
+      const tirar = document.createElement('button');
+      tirar.className = 'btn sec'; tirar.textContent = 'Remover';
+      tirar.addEventListener('click', async () => {
+        if (!confirm(`Tirar o acesso a ${d.id}?`)) return;
+        tirar.disabled = true;
+        try { await fb.deleteDoc(d.ref); $('#acesso-msg').textContent = `✓ ${d.id} já não tem acesso.`; }
+        catch (e) { $('#acesso-msg').textContent = `Não foi possível remover (${e.code || e.message}).`; }
+        carregarAcesso();
+      });
+      li.append(tirar);
+    }
+    return li;
+  }));
+}
+
+$('#acesso-form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const email = $('#acesso-email').value.trim().toLowerCase();
+  const botao = $('#acesso-form button');
+  botao.disabled = true;
+  try {
+    await fb.setDoc(fb.doc(fb.db, 'acesso', email), { adicionadoPor: fb.auth.currentUser.email.toLowerCase(), em: fb.serverTimestamp() });
+    $('#acesso-email').value = '';
+    $('#acesso-msg').textContent = `✓ ${email} já pode entrar na galeria com a conta Google.`;
+  } catch (e) {
+    $('#acesso-msg').textContent = e.code === 'permission-denied'
+      ? 'Não foi possível: confirma o email (ou essa pessoa já tem acesso).'
+      : `Não foi possível adicionar (${e.code || e.message}).`;
+  } finally {
+    botao.disabled = false;
+    carregarAcesso();
+  }
+});
 
 // Lista os ficheiros da cabine e das descartáveis e atualiza os custos
 let caminhosSessoes = [], caminhosDesc = [];
@@ -86,7 +144,7 @@ async function carregarSessoes() {
     caminhosSessoes = await listarTudo(await token(), 'sessoes/');
     sessoes = [...new Set(caminhosSessoes.map((c) => c.split('/')[1]))].filter((n) => /^[0-9]{12}-/.test(n)).sort().reverse();
   } catch (e) {
-    $('#resumo').textContent = `Não foi possível ler as fotos (${e.code}). Confirma os emails em storage.rules.`;
+    $('#resumo').textContent = `Não foi possível ler as fotos (${e.code}). Confirma que este email está no separador Acesso.`;
     return;
   }
   const n = sessoes.length;

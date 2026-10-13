@@ -659,3 +659,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .custo-nota { grid-column: 1 / -1; margin: 0; font-size: 15px; font-style: italic; color: #6b5d4e; }
 .custo-nota a { color: var(--turquesa-escuro); }
 .medidor.passou i { background: #c0475f; }
+
+/* Acesso (galeria) */
+.acesso-form { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 4px; }
+.acesso-form input { flex: 1 1 240px; min-width: 0; padding: 10px 14px; font: inherit; font-size: 18px; border: 2px solid var(--papel-2); border-radius: 8px; background: #fff; color: var(--tinta); }
+.acesso-form input:focus { outline: none; border-color: var(--turquesa); }
+.acesso-form .btn { margin: 0; width: auto; font-size: 18px; padding: 10px 22px; }
+.acesso-lista { list-style: none; margin: 14px 0 60px; padding: 0; display: grid; gap: 8px; }
+.acesso-lista li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; background: #fff; box-shadow: 0 3px 10px rgba(58,47,37,.08); }
+.acesso-lista div { min-width: 0; display: flex; flex-direction: column; }
+.acesso-email { font-size: 19px; font-weight: 600; overflow-wrap: anywhere; }
+.acesso-lista small { font-size: 14px; color: #8a7b66; }
+.acesso-lista .btn { margin: 0; width: auto; flex: none; font-size: 16px; padding: 7px 14px; }

@@ -54,6 +54,7 @@
     <nav class="g-tabs" role="tablist">
       <button role="tab" data-tab="cabine" aria-selected="true">Cabine <span id="n-cabine"></span></button>
       <button role="tab" data-tab="desc" aria-selected="false">Câmaras descartáveis <span id="n-desc"></span></button>
+      <button role="tab" data-tab="acesso" aria-selected="false">Acesso <span id="n-acesso"></span></button>
     </nav>
 
     <!-- Cabine -->
@@ -97,6 +98,17 @@
       </div>
 
       <div id="d-grelha" class="d-grelha"></div>
+    </div>
+
+    <!-- Quem tem acesso a esta galeria -->
+    <div id="tab-acesso" hidden>
+      <p class="g-legenda">Quem está nesta lista entra na galeria com a conta Google, vê todas as fotos (mesmo antes da revelação) e pode gerir as câmaras e esta lista.</p>
+      <form id="acesso-form" class="acesso-form">
+        <input id="acesso-email" type="email" required placeholder="email Google, ex: carolina@gmail.com" autocomplete="off" autocapitalize="none" spellcheck="false">
+        <button class="btn">Dar acesso</button>
+      </form>
+      <p id="acesso-msg" class="painel-msg"></p>
+      <ul id="acesso-lista" class="acesso-lista"></ul>
     </div>
 
     <div id="progresso" class="g-progresso" hidden><div><i></i></div><span></span></div>
