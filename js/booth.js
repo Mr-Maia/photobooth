@@ -1,7 +1,7 @@
-import { aplicarVintage, comporTira } from './effects.js';
-import { enfileirar, processarFila, aoMudarEstado, firebaseConfigurado } from './storage.js';
-import { iniciarLampadas } from './lampadas.js';
-import * as som from './sons.js';
+import { aplicarVintage, comporTira } from './effects.js?v=9';
+import { enfileirar, processarFila, aoMudarEstado, firebaseConfigurado } from './storage.js?v=9';
+import { iniciarLampadas } from './lampadas.js?v=9';
+import * as som from './sons.js?v=9';
 
 const cfg = window.PHOTOBOOTH_CONFIG;
 const $ = (s) => document.querySelector(s);

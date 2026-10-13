@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Great+Vibes&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=9">
 </head>
 <body class="convidado galeria">
   <header class="g-topo">
@@ -93,7 +93,7 @@
           <button data-mais="5" class="btn sec">+5 fotos</button>
           <button id="painel-novo" class="btn sec">Rolo novo</button>
           <button id="painel-zip" class="btn">Descarregar rolo</button>
-          <button id="painel-apagar" class="btn perigo">Apagar câmara</button>
+          <button id="painel-apagar" class="acao-apagar">Apagar câmara</button>
         </div>
         <p id="painel-msg" class="painel-msg"></p>
       </div>
@@ -124,7 +124,7 @@
         <p id="d-hora" class="g-d-hora"></p>
         <div id="d-fotos" class="grelha"></div>
         <button id="d-descarregar" class="btn">Descarregar esta sessão</button>
-        <button id="d-apagar" class="btn perigo">Apagar esta sessão</button>
+        <button id="d-apagar" class="acao-apagar">Apagar sessão</button>
       </div>
     </div>
   </dialog>
@@ -138,12 +138,14 @@
       <span id="foto-legenda"></span>
       <button id="foto-seg" class="seta" aria-label="Seguinte">›</button>
     </div>
-    <button id="foto-guardar" class="btn">Guardar esta foto</button>
-    <button id="foto-apagar" class="btn perigo">Apagar esta foto</button>
+    <div class="g-foto-acoes">
+      <button id="foto-apagar" class="acao-apagar">Apagar</button>
+      <button id="foto-guardar" class="btn">Guardar foto</button>
+    </div>
   </dialog>
 
-  <script src="js/config.js"></script>
+  <script src="js/config.js?v=9"></script>
   <script src="vendor/jszip.min.js"></script>
-  <script type="module" src="js/galeria.js"></script>
+  <script type="module" src="js/galeria.js?v=9"></script>
 </body>
 </html>

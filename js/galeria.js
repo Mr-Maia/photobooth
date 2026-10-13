@@ -1,8 +1,8 @@
 // Galeria privada dos noivos: login Google, cabine + câmaras descartáveis,
 // filtrar por pessoa, dar mais fotos a uma câmara, descarregar tudo.
-import { firebaseConfigurado, urlPublico } from './storage.js';
-import { guardar } from './guardar.js';
-import { listarTudo, atualizarCustos } from './custos.js';
+import { firebaseConfigurado, urlPublico } from './storage.js?v=9';
+import { guardar } from './guardar.js?v=9';
+import { listarTudo, atualizarCustos } from './custos.js?v=9';
 
 const FB_VER = '10.12.2';
 const cfg = window.PHOTOBOOTH_CONFIG;
