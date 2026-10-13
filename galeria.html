@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Great+Vibes&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=9">
+  <link rel="stylesheet" href="css/style.css?v=10">
 </head>
 <body class="convidado galeria">
   <header class="g-topo">
@@ -112,6 +112,16 @@
       <ul id="acesso-lista" class="acesso-lista"></ul>
     </div>
 
+    <!-- Barra de seleção (aparece quando há fotos selecionadas) -->
+    <div id="selecao" class="selecao" hidden>
+      <button id="sel-fechar" class="sel-fechar" aria-label="Cancelar seleção">✕</button>
+      <span id="sel-n" class="sel-n"></span>
+      <button id="sel-todas" class="ligacao sel-todas"><span class="sel-longo">Selecionar </span>todas</button>
+      <span class="sel-espaco"></span>
+      <button id="sel-apagar" class="acao-apagar sel-acao" aria-label="Apagar"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg><span>Apagar</span></button>
+      <button id="sel-descarregar" class="btn sel-acao" aria-label="Descarregar"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span>Descarregar</span></button>
+    </div>
+
     <div id="progresso" class="g-progresso" hidden><div><i></i></div><span></span></div>
   </section>
 
@@ -144,8 +154,8 @@
     </div>
   </dialog>
 
-  <script src="js/config.js?v=9"></script>
+  <script src="js/config.js?v=10"></script>
   <script src="vendor/jszip.min.js"></script>
-  <script type="module" src="js/galeria.js?v=9"></script>
+  <script type="module" src="js/galeria.js?v=10"></script>
 </body>
 </html>

@@ -1,9 +1,9 @@
 // Câmara descartável nos telemóveis dos convidados.
 // Cada pessoa tem N fotos, não as vê nem apaga; tudo é revelado à hora marcada.
-import { filmeDescartavel } from './effects.js?v=9';
-import { enfileirar, processarFila, aoMudarEstado, firebase, urlPublico, firebaseConfigurado } from './storage.js?v=9';
-import { guardar } from './guardar.js?v=9';
-import * as som from './sons.js?v=9';
+import { filmeDescartavel } from './effects.js?v=10';
+import { enfileirar, processarFila, aoMudarEstado, firebase, urlPublico, firebaseConfigurado } from './storage.js?v=10';
+import { guardar } from './guardar.js?v=10';
+import * as som from './sons.js?v=10';
 
 const cfg = window.PHOTOBOOTH_CONFIG;
 const D = cfg.descartavel;

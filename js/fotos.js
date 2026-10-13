@@ -1,6 +1,6 @@
-import { urlPublico } from './storage.js?v=9';
-import { iniciarLampadas } from './lampadas.js?v=9';
-import { guardar } from './guardar.js?v=9';
+import { urlPublico } from './storage.js?v=10';
+import { iniciarLampadas } from './lampadas.js?v=10';
+import { guardar } from './guardar.js?v=10';
 
 const cfg = window.PHOTOBOOTH_CONFIG;
 const $ = (s) => document.querySelector(s);

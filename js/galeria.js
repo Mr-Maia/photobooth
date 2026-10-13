@@ -1,8 +1,8 @@
 // Galeria privada dos noivos: login Google, cabine + câmaras descartáveis,
 // filtrar por pessoa, dar mais fotos a uma câmara, descarregar tudo.
-import { firebaseConfigurado, urlPublico } from './storage.js?v=9';
-import { guardar } from './guardar.js?v=9';
-import { listarTudo, atualizarCustos } from './custos.js?v=9';
+import { firebaseConfigurado, urlPublico } from './storage.js?v=10';
+import { guardar } from './guardar.js?v=10';
+import { listarTudo, atualizarCustos } from './custos.js?v=10';
 
 const FB_VER = '10.12.2';
 const cfg = window.PHOTOBOOTH_CONFIG;
@@ -74,6 +74,7 @@ document.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click
   $('#tab-cabine').hidden = b.dataset.tab !== 'cabine';
   $('#tab-desc').hidden = b.dataset.tab !== 'desc';
   $('#tab-acesso').hidden = b.dataset.tab !== 'acesso';
+  limparSelecao();
 }));
 
 // ══ Acesso ═══════════════════════════════════════════════════
@@ -162,7 +163,12 @@ async function carregarSessoes() {
     if (dia !== diaAnterior) {
       const h = document.createElement('h3');
       h.className = 'g-dia';
-      h.textContent = dataDe(id).toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' });
+      h.dataset.dia = dia;
+      const circ = document.createElement('span');
+      circ.className = 'sel-circulo'; circ.title = 'Selecionar o dia todo';
+      circ.addEventListener('click', () => selecionarDia(dia));
+      const txt = dataDe(id).toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' });
+      h.append(circ, txt[0].toUpperCase() + txt.slice(1));
       grelha.append(h);
       diaAnterior = dia;
     }
@@ -176,9 +182,10 @@ async function carregarSessoes() {
     const legenda = document.createElement('span');
     legenda.textContent = horaCurta(id);
     b.append(img, legenda);
-    b.addEventListener('click', () => abrirDetalhe(id));
+    selecionavel(b, id, () => abrirDetalhe(id));
     grelha.append(b);
   }
+  pintarSelecao();
 }
 
 function abrirDetalhe(id) {
@@ -269,7 +276,7 @@ function desenharPessoas() {
     const n = document.createElement('span'); n.className = 'pessoa-nome'; n.textContent = texto;
     const s = document.createElement('small'); s.textContent = sub;
     b.append(n, s);
-    b.addEventListener('click', () => { filtro = pasta; desenharPessoas(); desenharFotos(); });
+    b.addEventListener('click', () => { filtro = pasta; sel.chaves.clear(); desenharPessoas(); desenharFotos(); });
     return b;
   };
   const total = rolos.reduce((s, r) => s + r.fotos.length, 0);
@@ -364,10 +371,11 @@ function desenharFotos() {
         quem.textContent = r.nome;
         b.append(quem);
       }
-      b.addEventListener('click', () => abrirFoto(idx));
+      selecionavel(b, chaveDesc(r, f), () => abrirFoto(idx));
       cont.append(b);
     }
   }
+  pintarSelecao();
 }
 
 async function abrirFoto(i) {
@@ -384,6 +392,104 @@ $('#foto .fechar').addEventListener('click', () => $('#foto').close());
 $('#foto-guardar').addEventListener('click', async () => {
   const { r, f } = visiveis[atual];
   guardar([{ url: await urlDesc(caminhoDesc(r, f)), nome: `${r.nome} - ${f}` }]);
+});
+
+// ══ Selecionar várias (como no Google Fotos) ═════════════════
+// O círculo no canto aparece ao passar o rato; tocar nele (ou manter o dedo na foto) começa a seleção.
+// Com a seleção ativa, cada toque seleciona/desseleciona; Shift+clique seleciona um intervalo.
+const sel = { chaves: new Set(), ultima: null };
+const chaveDesc = (r, f) => `${r.pasta}/${f}`;
+const naCabine = () => !$('#tab-cabine').hidden;
+const ordemAtual = () => (naCabine() ? sessoes : visiveis.map(({ r, f }) => chaveDesc(r, f)));
+
+function selecionavel(el, chave, abrir) {
+  el.dataset.chave = chave;
+  const circ = document.createElement('span');
+  circ.className = 'sel-circulo';
+  el.append(circ);
+  let temporizador, longo = false;
+  const parar = () => clearTimeout(temporizador);
+  el.addEventListener('pointerdown', (e) => {
+    longo = false;
+    if (e.pointerType !== 'touch') return;
+    temporizador = setTimeout(() => { longo = true; navigator.vibrate?.(15); alternar(chave); }, 450);
+  });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => el.addEventListener(t, parar));
+  el.addEventListener('contextmenu', (e) => { if (e.pointerType !== 'mouse') e.preventDefault(); });
+  el.addEventListener('click', (e) => {
+    if (longo) { longo = false; return; }
+    if (sel.chaves.size || e.target === circ || e.shiftKey || e.metaKey || e.ctrlKey) alternar(chave, e);
+    else abrir();
+  });
+}
+
+function alternar(chave, e) {
+  const ordem = ordemAtual();
+  if (e?.shiftKey && sel.ultima && ordem.includes(sel.ultima)) {
+    const [a, b] = [ordem.indexOf(sel.ultima), ordem.indexOf(chave)].sort((x, y) => x - y);
+    ordem.slice(a, b + 1).forEach((k) => sel.chaves.add(k));
+  } else if (sel.chaves.has(chave)) sel.chaves.delete(chave);
+  else sel.chaves.add(chave);
+  sel.ultima = chave;
+  pintarSelecao();
+}
+
+function selecionarDia(dia) {
+  const ids = sessoes.filter((id) => nomePasta(id).startsWith(dia));
+  const todos = ids.every((id) => sel.chaves.has(id));
+  ids.forEach((id) => (todos ? sel.chaves.delete(id) : sel.chaves.add(id)));
+  pintarSelecao();
+}
+
+function limparSelecao() { sel.chaves.clear(); sel.ultima = null; pintarSelecao(); }
+
+function pintarSelecao() {
+  const existentes = new Set(ordemAtual());
+  for (const k of sel.chaves) if (!existentes.has(k)) sel.chaves.delete(k); // apagadas entretanto
+  const n = sel.chaves.size;
+  document.body.classList.toggle('a-selecionar', n > 0);
+  document.querySelectorAll('[data-chave]').forEach((el) => {
+    el.classList.toggle('selecionada', sel.chaves.has(el.dataset.chave));
+    el.setAttribute('aria-pressed', String(sel.chaves.has(el.dataset.chave)));
+  });
+  document.querySelectorAll('.g-dia[data-dia]').forEach((h) => {
+    const ids = sessoes.filter((id) => nomePasta(id).startsWith(h.dataset.dia));
+    h.classList.toggle('selecionada', ids.length > 0 && ids.every((id) => sel.chaves.has(id)));
+  });
+  $('#selecao').hidden = !n;
+  if (!n) return;
+  const tipo = naCabine() ? (n === 1 ? 'sessão selecionada' : 'sessões selecionadas') : (n === 1 ? 'foto selecionada' : 'fotos selecionadas');
+  $('#sel-n').innerHTML = `<b>${n}</b> <span class="sel-longo">${tipo}</span><span class="sel-curto">${n === 1 ? 'selecionada' : 'selecionadas'}</span>`;
+  $('#sel-todas').hidden = n === existentes.size;
+}
+
+const fotosSelecionadas = () => visiveis.filter(({ r, f }) => sel.chaves.has(chaveDesc(r, f)));
+
+$('#sel-fechar').addEventListener('click', limparSelecao);
+$('#sel-todas').addEventListener('click', () => { ordemAtual().forEach((k) => sel.chaves.add(k)); pintarSelecao(); });
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && sel.chaves.size && !document.querySelector('dialog[open]')) limparSelecao(); });
+
+$('#sel-descarregar').addEventListener('click', async () => {
+  const n = sel.chaves.size;
+  if (naCabine()) {
+    const ids = sessoes.filter((id) => sel.chaves.has(id));
+    await zipSessoes(ids, FICHEIROS, `${cfg.nomes} - ${n} ${n === 1 ? 'sessão' : 'sessões'}`);
+  } else {
+    await zipDescartaveis(null, `${cfg.nomes} - ${n} ${n === 1 ? 'foto' : 'fotos'}`, fotosSelecionadas());
+  }
+});
+
+$('#sel-apagar').addEventListener('click', async () => {
+  const n = sel.chaves.size;
+  let caminhos, pergunta;
+  if (naCabine()) {
+    caminhos = caminhosSessoes.filter((c) => sel.chaves.has(c.split('/')[1]));
+    pergunta = `Apagar ${n} ${n === 1 ? 'sessão' : 'sessões'} da cabine?`;
+  } else {
+    caminhos = fotosSelecionadas().flatMap(({ r, f }) => { const c = caminhoDesc(r, f); return [c, c.replace('.jpg', '-mini.jpg')]; });
+    pergunta = `Apagar ${n} ${n === 1 ? 'foto' : 'fotos'} das câmaras descartáveis?`;
+  }
+  if (await apagar(caminhos, pergunta)) { limparSelecao(); carregarTudo(); }
 });
 
 // ══ Apagar ═══════════════════════════════════════════════════
@@ -492,9 +598,10 @@ function zipSessoes(ids, ficheiros, nome) {
   });
 }
 
-function zipDescartaveis(lista, nome) {
+function zipDescartaveis(lista, nome, itens) {
   return tarefa(async () => {
-    const todas = lista.flatMap((r) => r.fotos.map((f) => ({ r, f })));
+    const todas = itens || lista.flatMap((r) => r.fotos.map((f) => ({ r, f })));
+    const umRolo = new Set(todas.map((x) => x.r)).size === 1;
     const partes = [];
     for (let i = 0; i < todas.length; i += FOTOS_POR_ZIP) partes.push(todas.slice(i, i + FOTOS_POR_ZIP));
     let feito = 0;
@@ -503,7 +610,7 @@ function zipDescartaveis(lista, nome) {
       for (let i = 0; i < partes[p].length; i += 6) { // 6 de cada vez
         await Promise.all(partes[p].slice(i, i + 6).map(async ({ r, f }) => {
           const blob = await obterBlob(await urlDesc(caminhoDesc(r, f)));
-          const destino = lista.length === 1 ? f : `${r.nome} (${r.id})/${f}`;
+          const destino = umRolo ? f : `${r.nome} (${r.id})/${f}`;
           if (blob) zip.file(destino, blob);
           progresso(++feito, todas.length, `A juntar fotos… ${feito} / ${todas.length}`);
         }));
